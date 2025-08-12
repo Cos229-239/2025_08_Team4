@@ -25,7 +25,7 @@ export default function Layout() {
                 fontFamily: "Pacifico_400Regular",
                 fontSize: 40,
                 color: "#FFFFFF",
-                height: 100,
+                height:85,
                 alignItems: "center",
                 justifyContent: "center",
               }}
