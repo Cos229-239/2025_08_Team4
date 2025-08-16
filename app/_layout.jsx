@@ -2,7 +2,7 @@
 import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from '@expo/vector-icons';
 import PlusButton from '../components/Buttons/PlusButton';
-import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
+import { useFonts, Pacifico_400Regular } from "@expo/google-fonts/pacifico";
 import { Text } from "react-native";
 
 export default function Layout() {
@@ -11,6 +11,11 @@ export default function Layout() {
   const [fontsLoaded] = useFonts({
     Pacifico_400Regular,
   });
+
+  // Don't render until fonts are loaded
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <Tabs>
@@ -32,17 +37,16 @@ export default function Layout() {
             >
               LucidPaths
             </Text>
-             
           ),
           headerStyle: {
-      backgroundColor: "#004496",
-    },
+            backgroundColor: "#004496",
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" color={color} size={size} />
           ),
         }}
       />
-          <Tabs.Screen
+      <Tabs.Screen
         name="addgoal"
         options={{
           tabBarButton: (props) => (
