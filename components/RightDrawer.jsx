@@ -21,18 +21,18 @@ export default function RightDrawer() {
       <Animated.View
         style={{
           width: WIDTH,
-          backgroundColor: "#fff",
+          backgroundColor: "#E2FAF5",
           transform: [{ translateX: x }],
           shadowColor: "#000",
           shadowOffset: { width: -2, height: 0 },
           shadowOpacity: 0.25,
           shadowRadius: 10,
-          elevation: 10,
-          paddingTop: 48,
+          elevation: 60,
+          paddingTop: 70,
           paddingHorizontal: 16,
         }}
       >
-        <Text style={{ fontWeight: "600", fontSize: 18, marginBottom: 16 }}>Menu</Text>
+        <Text style={{ fontWeight: "600", fontSize: 18, marginBottom: 30 }}>Menu</Text>
         <Link href="/(drawer)/about" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
           About
         </Link>
