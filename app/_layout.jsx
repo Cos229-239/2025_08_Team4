@@ -45,6 +45,25 @@ export default function Layout() {
           <Tabs.Screen
         name="addgoal"
         options={{
+             headerTitleAlign: "center",
+          headerTitle: () => (
+            <Text
+              style={{
+                fontFamily: "Pacifico_400Regular",
+                fontSize: 40,
+                color: "#FFFFFF",
+                height:95,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Goal Worksheet
+            </Text>
+             
+          ),
+          headerStyle: {
+      backgroundColor: "#004496",
+    },
           tabBarButton: (props) => (
             <PlusButton
               {...props}
@@ -57,13 +76,32 @@ export default function Layout() {
         }}
         listeners={{
           tabPress: (e) => {
-            e.preventDefault(); // prevent normal tab navigation
+            e.preventDefault(); // turns off the tab so we can use the PlusButton.jsx file
           },
         }}
       />
       <Tabs.Screen
         name="about"
         options={{
+                headerTitleAlign: "center",
+          headerTitle: () => (
+            <Text
+              style={{
+                fontFamily: "Pacifico_400Regular",
+                fontSize: 40,
+                color: "#FFFFFF",
+                height:95,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Menu
+            </Text>
+             
+          ),
+          headerStyle: {
+      backgroundColor: "#004496",
+    },
           title: "Menu",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="menu" color={color} size={size} />
