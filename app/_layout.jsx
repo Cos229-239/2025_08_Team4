@@ -20,11 +20,6 @@ function TabsContent() {
     );
   }
 
-  // Don't render until fonts are loaded
-  if (!fontsLoaded) {
-    return null;
-  }
-
   return (
     <>
       <Tabs
@@ -52,10 +47,11 @@ function TabsContent() {
             >
               LucidPaths
             </Text>
+             
           ),
           headerStyle: {
-            backgroundColor: "#004496",
-          },
+      backgroundColor: "#004496",
+    },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" color={color} size={size} />
           ),
