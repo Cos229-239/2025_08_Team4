@@ -80,6 +80,25 @@ function TabsContent() {
           headerStyle: {
       backgroundColor: "#004496",
     },
+             headerTitleAlign: "center",
+          headerTitle: () => (
+            <Text
+              style={{
+                fontFamily: "Pacifico_400Regular",
+                fontSize: 40,
+                color: "#FFFFFF",
+                height:95,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Goal Worksheet
+            </Text>
+             
+          ),
+          headerStyle: {
+      backgroundColor: "#004496",
+    },
           tabBarButton: (props) => (
             <PlusButton
               {...props}
@@ -92,6 +111,7 @@ function TabsContent() {
         }}
         listeners={{
           tabPress: (e) => {
+            e.preventDefault(); // turns off the tab so we can use the PlusButton.jsx file
             e.preventDefault(); // turns off the tab so we can use the PlusButton.jsx file
           },
         }}
