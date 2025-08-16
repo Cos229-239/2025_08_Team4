@@ -39,7 +39,7 @@ export default function RightDrawer() {
         <Link href="/(drawer)/placeholder" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
           Placeholder
         </Link>
-        {/* add more links as needed */}
+        {/* Add the other pages here just as above */}
       </Animated.View>
     </View>
   );

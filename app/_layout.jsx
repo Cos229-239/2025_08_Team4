@@ -111,15 +111,14 @@ function TabsContent() {
         }}
         listeners={{
           tabPress: (e) => {
-            e.preventDefault(); // turns off the tab so we can use the PlusButton.jsx file
-            e.preventDefault(); // turns off the tab so we can use the PlusButton.jsx file
+            e.preventDefault(); // Stops the default tab from being touchable and lets us use the image.
           },
         }}
       />
 
-        {/* Menu tab: only opens the overlay; does NOT navigate */}
+        {/* calls the openDraw functuon with the menu.jsx being the place holder*/}
         <Tabs.Screen
-          name="menu"               // ensure app/menu.jsx exists
+          name="menu"               
           options={{
             headerShown: false,
             tabBarIcon: ({ color, size }) => <Ionicons name="menu" color={color} size={size} />,
@@ -128,23 +127,21 @@ function TabsContent() {
           listeners={{
             tabPress: (e) => {
               e.preventDefault();    // block navigation to /menu
-              openDrawer();          // open the overlay
+              openDrawer();          // calls the custom drawer overlay with the openDrawer Functiuon
             },
           }}
         />
-
-
-  {/* 🔒 Hide the (drawer) group from the tab bar */}
-  <Tabs.Screen name="(drawer)" options={{ href: null }} />
+        
+        {/* Below code hides the drawer folder from the tab menu. */}
+  <Tabs.Screen name="(drawer)" options={{ href: null }} /> 
 </Tabs>
 
-      {/* Mount overlay once so it can appear over any tab */}
+      {/* This allows our custom drawer to load over an of the other tabs. */}
       <RightDrawer />
     </>
   );
 }
 
-// 👇 THIS must be the ONLY default export in this file
 export default function Layout() {
   return (
     <RightDrawerProvider>
