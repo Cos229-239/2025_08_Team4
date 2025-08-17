@@ -9,6 +9,7 @@ export default function HiddenGroupLayout() {
         headerStyle: { backgroundColor: "#004496" },
         headerTintColor: "#fff",
       }}
+      
     />
   );
 }
