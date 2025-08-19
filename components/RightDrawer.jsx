@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Pressable, StyleSheet, View, Text, } from "react-native";
 import { useRightDrawer } from "./RightDrawerContext";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 
 const PANEL_WIDTH = Math.floor(Dimensions.get("window").width * 0.8);
 
@@ -72,13 +72,34 @@ export default function RightDrawer() {
   }}
       >
         <Text style={{ fontWeight: "600", fontSize: 18, marginBottom: 30 }}>Menu</Text>
-        <Link href="/(drawer)/about" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
-          About
-        </Link>
-        <Link href="/(drawer)/placeholder" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
-          Placeholder
-        </Link>
-        {/* drawer content */}
+        <Pressable 
+          onPress={() => {
+            closeDrawer();
+            router.push('/(drawer)/welcomescreen');
+          }} 
+          style={{ paddingVertical: 12 }}
+        >
+          <Text>Welcome Screen</Text>
+        </Pressable>
+        <Pressable 
+          onPress={() => {
+            closeDrawer();
+            router.push('/(drawer)/about');
+          }} 
+          style={{ paddingVertical: 12 }}
+        >
+          <Text>About</Text>
+        </Pressable>
+        <Pressable 
+          onPress={() => {
+            closeDrawer();
+            router.push('/(drawer)/placeholder');
+          }} 
+          style={{ paddingVertical: 12 }}
+        >
+          <Text>Placeholder</Text>
+        </Pressable>
+        {}
       </Animated.View>
     </View>
   );
