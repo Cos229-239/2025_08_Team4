@@ -1,15 +1,23 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+// components/RightDrawerContext.jsx
+import { createContext, useContext, useMemo, useState } from "react";
 
-const RightDrawerCtx = createContext(null);
-export const useRightDrawer = () => useContext(RightDrawerCtx);
+const RightDrawerContext = createContext({
+  isOpen: false,
+  openDrawer: () => {},
+  closeDrawer: () => {},
+});
 
-export function RightDrawerProvider({ children }) {
-  const [open, setOpen] = useState(false);
-  const openDrawer = useCallback(() => setOpen(true), []);
-  const closeDrawer = useCallback(() => setOpen(false), []);
+export const RightDrawerProvider = ({ children }) => {
+  const [isOpen, setOpen] = useState(false);
+  const openDrawer = () => setOpen(true);
+  const closeDrawer = () => setOpen(false);
+
+  const value = useMemo(() => ({ isOpen, openDrawer, closeDrawer }), [isOpen]);
   return (
-    <RightDrawerCtx.Provider value={{ open, openDrawer, closeDrawer }}>
+    <RightDrawerContext.Provider value={value}>
       {children}
-    </RightDrawerCtx.Provider>
+    </RightDrawerContext.Provider>
   );
-}
+};
+
+export const useRightDrawer = () => useContext(RightDrawerContext);

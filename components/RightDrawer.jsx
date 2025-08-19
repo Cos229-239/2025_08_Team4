@@ -1,36 +1,75 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Dimensions, Pressable, View, Text, StyleSheet } from "react-native";
-import { Link } from "expo-router";
+// components/RightDrawer.jsx
+import { useEffect, useRef, useState } from "react";
+import { Animated, Dimensions, Pressable, StyleSheet, View, Text, } from "react-native";
 import { useRightDrawer } from "./RightDrawerContext";
+import { Link } from "expo-router";
 
-const WIDTH = Math.min(320, Math.round(Dimensions.get("window").width * 0.85));
+const PANEL_WIDTH = Math.floor(Dimensions.get("window").width * 0.8);
 
 export default function RightDrawer() {
-  const { open, closeDrawer } = useRightDrawer();
-  const x = useRef(new Animated.Value(WIDTH)).current;
+  const { isOpen, closeDrawer } = useRightDrawer();
+
+  // animate slide and fade
+  const slideX = useRef(new Animated.Value(PANEL_WIDTH)).current; // off-screen right
+  const fade   = useRef(new Animated.Value(0)).current;           // backdrop opacity
+  const [visible, setVisible] = useState(false);                  // mount/unmount layer
 
   useEffect(() => {
-    Animated.timing(x, { toValue: open ? 0 : WIDTH, duration: 220, useNativeDriver: true }).start();
-  }, [open]);
+    if (isOpen) {
+      // mount then animate in
+      setVisible(true);
+      Animated.parallel([
+        Animated.timing(slideX, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(fade,   { toValue: 1, duration: 700, useNativeDriver: true }),
+      ]).start();
+    } else {
+      // animate out then unmount so no shadow remains
+      Animated.parallel([
+        Animated.timing(slideX, { toValue: PANEL_WIDTH, duration: 200, useNativeDriver: true }),
+        Animated.timing(fade,   { toValue: 0,            duration: 100, useNativeDriver: true }),
+      ]).start(({ finished }) => finished && setVisible(false));
+    }
+  }, [isOpen, slideX, fade]);
 
-  if (!open) return null;
+  if (!visible) return null; // nothing rendered when closed
 
   return (
-    <View style={[StyleSheet.absoluteFillObject, { zIndex: 1000, flexDirection: "row" }]}>
-      <Pressable style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)" }} onPress={closeDrawer} />
+    <View
+      style={[
+        StyleSheet.absoluteFill,
+        { zIndex: 9999, elevation: 9999, pointerEvents: "auto" },
+      ]}
+    >
+      {/* Backdrop: covers entire screen except the drawer width on the right */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          { right: PANEL_WIDTH, opacity: fade, backgroundColor: "rgba(0,0,0,0.4)" },
+        ]}
+        pointerEvents="auto"
+      >
+        <Pressable style={StyleSheet.absoluteFill} onPress={closeDrawer} />
+      </Animated.View>
+
+      {/* Drawer panel */}
       <Animated.View
         style={{
-          width: WIDTH,
-          backgroundColor: "#E2FAF5",
-          transform: [{ translateX: x }],
-          shadowColor: "#000",
-          shadowOffset: { width: -2, height: 0 },
-          shadowOpacity: 0.25,
-          shadowRadius: 10,
-          elevation: 60,
-          paddingTop: 70,
-          paddingHorizontal: 16,
-        }}
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    width: PANEL_WIDTH,
+    transform: [{ translateX: slideX }],
+    backgroundColor: "#E2FAF5",
+    zIndex: 10000,
+    elevation: 10000,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: -4, height: 0 },
+    paddingTop: 60,       // give space below notch/status bar
+    paddingHorizontal: 20 // consistent left/right padding
+  }}
       >
         <Text style={{ fontWeight: "600", fontSize: 18, marginBottom: 30 }}>Menu</Text>
         <Link href="/(drawer)/about" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
@@ -39,7 +78,7 @@ export default function RightDrawer() {
         <Link href="/(drawer)/placeholder" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
           Placeholder
         </Link>
-        {/* Add the other pages here just as above */}
+        {/* drawer content */}
       </Animated.View>
     </View>
   );
