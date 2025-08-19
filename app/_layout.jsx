@@ -7,7 +7,7 @@ import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 import { RightDrawerProvider, useRightDrawer } from "../components/RightDrawerContext";
 import RightDrawer from "../components/RightDrawer";
 
-const HEADER_STYLE = { backgroundColor: "#004496" };
+const HEADER_STYLE = { backgroundColor: "#3177C9" };
 const HEADER_TITLE = (txt) => (
   <Text
     style={{
