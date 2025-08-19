@@ -1,9 +1,15 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function AddGoal() {
+  const [inputText, setInputText] = useState('');
+
   return (
     <View style={styles.container}>
+        <Text style={styles.title}>Add a New Goal</Text>
+
+      <TextInput style={styles.textInput} placeholder="Enter your goal title..." value={inputText} onChangeText={(text) => setInputText(text)}/>
+
       <Pressable style={styles.button} onPress={() => console.log("Add button pressed")}>
         <Text style={styles.buttonText}>Add</Text>
       </Pressable>
@@ -18,19 +24,39 @@ export default function AddGoal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 100,
+    alignItems: 'center',
   },
+
+   title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 20,
+    },
+
+  textInput: {
+      width: '80%',
+      height: 50,
+      borderColor: '#ccc',
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      fontSize: 16,
+      marginBottom: 80,
+    },
+
   button: {
     position: 'absolute',
     alignSelf: 'center',
-    width: 200,
-    paddingVertical: 14,
+    width: 300,
+    paddingVertical: 24,
     backgroundColor: '#007AFF',
     borderRadius: 8,
     bottom: 280,
     alignItems: 'center',
   },
   cancelButton: {
-    bottom: 190,
+    bottom: 170,
     backgroundColor: '#FF3B30',
   },
   buttonText: {
