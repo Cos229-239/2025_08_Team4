@@ -1,4 +1,3 @@
-// app/_layout.jsx
 import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Text, View, ActivityIndicator, Pressable } from "react-native";
@@ -25,7 +24,7 @@ const HEADER_TITLE = (txt) => (
 
 function TabsContent() {
   const router = useRouter();
-  const { openDrawer } = useRightDrawer();   // now safely inside Provider
+  const { openDrawer } = useRightDrawer();   
   const [fontsLoaded] = useFonts({ Pacifico_400Regular });
 
   if (!fontsLoaded) {
@@ -39,6 +38,7 @@ function TabsContent() {
   return (
     <>
       <Tabs
+        initialRouteName="signup"
         screenOptions={{
           headerTitleAlign: "center",
           headerStyle: HEADER_STYLE,
@@ -101,6 +101,9 @@ function TabsContent() {
         options={{ 
           href: null,
           headerTitle: () => HEADER_TITLE("LucidPaths"), }} />
+
+          <Tabs.Screen name="signup" options={{ href: null }} />
+
       </Tabs>
 
       {/* Drawer overlays tabs */}
