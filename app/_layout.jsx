@@ -1,75 +1,18 @@
 // app/_layout.jsx
-import { Tabs, useRouter } from "expo-router";
-import { Ionicons } from '@expo/vector-icons';
-import PlusButton from '../components/Buttons/PlusButton';
-import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
-import { Text } from "react-native";
+import { Stack } from 'expo-router';
 
-export default function Layout() {
-    const router = useRouter();
-    
-  const [fontsLoaded] = useFonts({
-    Pacifico_400Regular,
-  });
-
+export default function RootLayout() {
   return (
-    <Tabs>
-     <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          headerTitleAlign: "center",
-          headerTitle: () => (
-            <Text
-              style={{
-                fontFamily: "Pacifico_400Regular",
-                fontSize: 40,
-                color: "#FFFFFF",
-                height:85,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              LucidPaths
-            </Text>
-             
-          ),
-          headerStyle: {
-      backgroundColor: "#004496",
-    },
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" color={color} size={size} />
-          ),
-        }}
-      />
-          <Tabs.Screen
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
         name="addgoal"
         options={{
-          tabBarButton: (props) => (
-            <PlusButton
-              {...props}
-              size={50}
-              onPress={() => {
-                router.push('/addgoal');
-              }}
-            />
-          ),
-        }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault(); // prevent normal tab navigation
-          },
+          presentation: 'transparentModal',
+          animation: 'none',
+          headerShown: false,
         }}
       />
-      <Tabs.Screen
-        name="about"
-        options={{
-          title: "Menu",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="menu" color={color} size={size} />
-          ),
-        }}
-      />
-    </Tabs>
+    </Stack>
   );
 }
