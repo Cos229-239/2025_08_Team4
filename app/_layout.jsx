@@ -38,7 +38,7 @@ function TabsContent() {
   return (
     <>
       <Tabs
-        initialRouteName="signup"
+        initialRouteName="login"
         screenOptions={{
           headerTitleAlign: "center",
           headerStyle: HEADER_STYLE,
@@ -102,7 +102,7 @@ function TabsContent() {
           href: null,
           headerTitle: () => HEADER_TITLE("LucidPaths"), }} />
 
-          <Tabs.Screen name="signup" options={{ href: null }} />
+          <Tabs.Screen name="login" options={{ href: null }} />
 
       </Tabs>
 
