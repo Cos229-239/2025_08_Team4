@@ -4,6 +4,9 @@ import { Animated, Dimensions, Pressable, StyleSheet, View, Text, } from "react-
 import { useRightDrawer } from "./RightDrawerContext";
 import { Link } from "expo-router";
 
+import { useAuth } from "../components/AuthContext";
+import { router } from "expo-router";
+
 const PANEL_WIDTH = Math.floor(Dimensions.get("window").width * 0.8);
 
 export default function RightDrawer() {
@@ -78,6 +81,9 @@ export default function RightDrawer() {
         <Link href="/(drawer)/placeholder" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
           Placeholder
         </Link>
+        <Pressable onPress={async ()=>{ await signOut(); router.replace("/(auth)/login"); }}>
+          <Text>Sign out</Text>
+        </Pressable>
         {/* drawer content */}
       </Animated.View>
     </View>
