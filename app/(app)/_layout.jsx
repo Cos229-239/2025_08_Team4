@@ -48,7 +48,7 @@ function TabsContent() {
     let title = "LucidPaths";
 
     // if viewing a drawer route, use the last segment as title
-    if (pathname?.includes("/(drawer)/")) {
+    if (pathname?.includes("(drawer)")) {
       const seg = pathname.split("/").filter(Boolean).pop();
       title = pretty(seg);
     }

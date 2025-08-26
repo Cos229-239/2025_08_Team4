@@ -1,17 +1,17 @@
+// app/_layout.jsx
 import { Slot, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "../components/AuthContext";
 
 function AuthGate() {
   const { isSignedIn, loading } = useAuth();
-  const segments = useSegments();   // e.g. ["(auth)","login"] or ["(app)","index"]
+  const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
-    const inAuth = segments[0] === "(auth)";
-    const inApp  = segments[0] === "(app)";
 
+    const inAuth = segments[0] === "(auth)";
     if (!isSignedIn && !inAuth) {
       router.replace("/(auth)/login");
     } else if (isSignedIn && inAuth) {
@@ -19,7 +19,8 @@ function AuthGate() {
     }
   }, [isSignedIn, loading, segments, router]);
 
-  return <Slot />;
+  if (loading) return null;
+  return <Slot key={isSignedIn ? "app" : "auth"} />;
 }
 
 export default function RootLayout() {

@@ -7,6 +7,8 @@ import { Link } from "expo-router";
 import { useAuth } from "../components/AuthContext";
 import { router } from "expo-router";
 
+const { signOut } = useAuth();
+
 const PANEL_WIDTH = Math.floor(Dimensions.get("window").width * 0.8);
 
 export default function RightDrawer() {
@@ -35,6 +37,11 @@ export default function RightDrawer() {
   }, [isOpen, slideX, fade]);
 
   if (!visible) return null; // nothing rendered when closed
+
+  async function handleSignOut() {
+  await signOut();
+  router.replace("/(auth)/login"); // ensure we land on the login route
+}
 
   return (
     <View
