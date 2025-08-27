@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { LinearGradient } from 'expo-linear-gradient';
+import { account, ID } from '../lib/appwrite'; // <-- Import Appwrite functions
 
 const HEADER_TITLE = () => (
   <Text
@@ -20,7 +21,7 @@ const HEADER_TITLE = () => (
 );
 
 export default function SignUpScreen() {
-  const router = useRouter(); 
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
     Oswald_600SemiBold,
     Pacifico_400Regular,
@@ -33,7 +34,7 @@ export default function SignUpScreen() {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
 
   
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
@@ -43,11 +44,20 @@ export default function SignUpScreen() {
       return;
     }
 
-   // Backend Call will go here 
+    try {
+      
+      const newUser = await account.create(ID.unique(), email, password);
+      console.log('Account created:', newUser);
 
-
-    console.log('Account created for:', email);
-    router.push('/index'); 
+     
+      await account.createEmailPasswordSession(email, password);
+      
+      
+      router.replace('/index');
+    } catch (error) {
+      console.error('Appwrite Signup Error:', error);
+      Alert.alert('Error', error.message);
+    }
   };
 
   if (!fontsLoaded) {

@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { LinearGradient } from 'expo-linear-gradient';
+import { account } from '../lib/appwrite'; // Import Appwrite
 
 const HEADER_TITLE = () => (
   <Text
@@ -20,7 +21,7 @@ const HEADER_TITLE = () => (
 );
 
 export default function LoginScreen() {
-  const router = useRouter(); 
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
     Oswald_600SemiBold,
     Pacifico_400Regular,
@@ -30,18 +31,24 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  
-  const handleLogin = () => {
+  // This function now calls Appwrite to log the user in
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter your email and password.');
       return;
     }
 
-    // Backend authentication Will Go here 
-    
-    // On success, navigate to the home screen
-    console.log('Logged in as:', email);
-    router.push('/index');
+    try {
+      // Create a session with Appwrite
+      await account.createEmailPasswordSession(email, password);
+      console.log('Login successful');
+      
+      // Navigate to the home screen
+      router.replace('/index');
+    } catch (error) {
+      console.error('Appwrite Login Error:', error);
+      Alert.alert('Error', error.message);
+    }
   };
 
   if (!fontsLoaded) {

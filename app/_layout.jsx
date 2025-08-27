@@ -5,7 +5,7 @@ import { Text, View, ActivityIndicator, Pressable } from "react-native";
 import PlusButton from "../components/Buttons/PlusButton";
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 import { RightDrawerProvider, useRightDrawer } from "../components/RightDrawerContext";
-import RightDrawer from "../components/RightDrawer";
+import RightDrawer from "../components/RightDrawer"; // Corrected import path
 
 const HEADER_STYLE = { backgroundColor: "#3177C9" };
 const HEADER_TITLE = (txt) => (
@@ -25,7 +25,7 @@ const HEADER_TITLE = (txt) => (
 
 function TabsContent() {
   const router = useRouter();
-  const { openDrawer } = useRightDrawer();   // now safely inside Provider
+  const { openDrawer } = useRightDrawer(); 
   const [fontsLoaded] = useFonts({ Pacifico_400Regular });
 
   if (!fontsLoaded) {
@@ -39,12 +39,23 @@ function TabsContent() {
   return (
     <>
       <Tabs
+        initialRouteName="welcomescreen"
         screenOptions={{
           headerTitleAlign: "center",
           headerStyle: HEADER_STYLE,
           headerTintColor: "#fff",
         }}
       >
+        <Tabs.Screen 
+          name="welcomescreen" 
+          options={{ 
+            href: null, 
+            headerShown: false, 
+            tabBarStyle: { display: 'none' } 
+          }} 
+        />
+        <Tabs.Screen name="signup" options={{ href: null, tabBarStyle: { display: 'none' } }} />
+        <Tabs.Screen name="login" options={{ href: null, tabBarStyle: { display: 'none' } }} />
         <Tabs.Screen
           name="index"
           options={{
@@ -55,7 +66,6 @@ function TabsContent() {
             ),
           }}
         />
-
         <Tabs.Screen
           name="addgoal"
           options={{
@@ -71,12 +81,9 @@ function TabsContent() {
             ),
           }}
           listeners={{
-            tabPress: (e) => {
-              e.preventDefault(); // use the custom button instead of default nav
-            },
+            tabPress: (e) => { e.preventDefault(); },
           }}
         />
-
         <Tabs.Screen
           name="menu"
           options={{
@@ -89,21 +96,14 @@ function TabsContent() {
             ),
           }}
           listeners={{
-            tabPress: (e) => {
-              e.preventDefault();  // block navigation to /menu
-              openDrawer();        // open the custom drawer instead
-            },
+            tabPress: (e) => { e.preventDefault(); openDrawer(); },
           }}
         />
-
-        {/* Hide the (drawer) route from the tab bar */}
         <Tabs.Screen name="(drawer)" 
         options={{ 
           href: null,
           headerTitle: () => HEADER_TITLE("LucidPaths"), }} />
       </Tabs>
-
-      {/* Drawer overlays tabs */}
       <RightDrawer />
     </>
   );

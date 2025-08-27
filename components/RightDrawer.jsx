@@ -78,6 +78,9 @@ export default function RightDrawer() {
         <Link href="/(drawer)/placeholder" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
           Placeholder
         </Link>
+        <Pressable onPress={async ()=>{ await signOut(); router.replace("/(auth)/login"); }}>
+          <Text>Sign out</Text>
+        </Pressable>
         {/* drawer content */}
       </Animated.View>
     </View>
