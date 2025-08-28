@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, TextInput, TouchableOpacity, Pressable } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Feather';
+import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -62,6 +63,11 @@ export default function LoginScreen() {
           headerTransparent: true,
           headerTintColor: '#fff', 
           headerShown: true,
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ marginLeft: 15 }}>
+              <Ionicons name="arrow-back-outline" size={24} color="#fff" />
+            </Pressable>
+          ),
         }}
       />
       
