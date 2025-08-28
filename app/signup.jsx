@@ -69,6 +69,7 @@ export default function SignUpScreen() {
           headerTitle: () => HEADER_TITLE(),
           headerTransparent: true,
           headerTintColor: '#fff', 
+          headerShown: true,
         }}
       />
       
@@ -122,7 +123,6 @@ export default function SignUpScreen() {
             </TouchableOpacity>
           </View>
 
-          {}
           <View style={styles.signinContainer}>
             <Text style={styles.signinText}>Already have an account? </Text>
             <Pressable onPress={() => router.push('/login')}>
@@ -219,7 +219,6 @@ const styles = StyleSheet.create({
     fontSize: 24, 
     color: '#FFFFFF' 
   },
- 
   signinContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

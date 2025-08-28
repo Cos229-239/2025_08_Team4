@@ -61,6 +61,7 @@ export default function LoginScreen() {
           headerTitle: () => HEADER_TITLE(),
           headerTransparent: true,
           headerTintColor: '#fff', 
+          headerShown: true,
         }}
       />
       
@@ -99,7 +100,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
           
-          {/* --- NEW SIGN UP LINK --- */}
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Don't have an account? </Text>
             <Pressable onPress={() => router.push('/signup')}>
@@ -186,7 +186,6 @@ const styles = StyleSheet.create({
     fontSize: 24, 
     color: '#FFFFFF' 
   },
-  // --- NEW STYLES FOR SIGN UP LINK ---
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

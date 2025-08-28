@@ -80,6 +80,7 @@ function TabsContent({ onAddGoalPress }) {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home-outline" color={color} size={size} />
             ),
+            headerShown: true, // <-- THE FIX
           }}
         />
         <Tabs.Screen
@@ -95,13 +96,14 @@ function TabsContent({ onAddGoalPress }) {
                 onPress={onAddGoalPress}
               />
             ),
+            headerShown: true, // <-- THE FIX
           }}
           listeners={{ tabPress: (e) => { e.preventDefault(); }, }}
         />
         <Tabs.Screen
           name="menu"
           options={{
-            headerShown: false,
+            headerShown: true, // <-- THE FIX
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="menu" color={color} size={size} />
             ),
@@ -111,7 +113,7 @@ function TabsContent({ onAddGoalPress }) {
           }}
           listeners={{ tabPress: (e) => { e.preventDefault(); openDrawer(); }, }}
         />
-        <Tabs.Screen name="(drawer)" options={{ href: null, headerTitle: () => HEADER_TITLE("LucidPaths"), }} />
+        <Tabs.Screen name="(drawer)" options={{ href: null, headerTitle: () => HEADER_TITLE("LucidPaths"), headerShown: true, }} />
       </Tabs>
       <RightDrawer />
     </View>
