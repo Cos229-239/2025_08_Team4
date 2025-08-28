@@ -53,7 +53,7 @@ export default function SignUpScreen() {
       await account.createEmailPasswordSession(email, password);
       
       
-      router.replace('/index');
+      router.replace('/');
     } catch (error) {
       console.error('Appwrite Signup Error:', error);
       Alert.alert('Error', error.message);
