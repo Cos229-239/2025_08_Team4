@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
+import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 
 const GoalSelector = () => (
   <View style={styles.dropdown}>
-    <Text style={[styles.dropdownText, { fontFamily: 'Oswald_600SemiBold' }]}>Select one of your Summits</Text>
+    <Text style={styles.dropdownText}>Select one of your Summits</Text>
     <Ionicons name="chevron-down-outline" size={24} color="#333" />
   </View>
 );
 
 export default function AddGoal({ isVisible, onClose }) {
   const [activeTab, setActiveTab] = useState('goal');
-
   const [fontsLoaded] = useFonts({
     Oswald_600SemiBold,
+    OpenSans_700Bold,
   });
 
   if (!fontsLoaded) {
@@ -27,157 +29,157 @@ export default function AddGoal({ isVisible, onClose }) {
       transparent={true}
       visible={isVisible}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
-      <View style={styles.centeredView}>
-        <View style={styles.modalView}>
-          <View style={styles.tabContainer}>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'goal' && styles.activeTab]} 
-              onPress={() => setActiveTab('goal')}
-            >
-              <Text style={[styles.tabText, activeTab === 'goal' && styles.activeTabText, { fontFamily: 'Oswald_600SemiBold' }]}>NEW GOAL</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'task' && styles.activeTab]} 
-              onPress={() => setActiveTab('task')}
-            >
-              <Text style={[styles.tabText, activeTab === 'task' && styles.activeTabText, { fontFamily: 'Oswald_600SemiBold' }]}>NEW TASK</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {activeTab === 'goal' ? (
-            <>
-              <Text style={[styles.label, { fontFamily: 'Oswald_600SemiBold' }]}>Goal Title</Text>
-              <TextInput 
-                style={[styles.input, { fontFamily: 'Oswald_600SemiBold' }]} 
-                placeholder="Get Promotion" 
-                placeholderTextColor="#A0A0A0"
-              />
-            </>
-          ) : (
-            <>
-              <Text style={[styles.label, { fontFamily: 'Oswald_600SemiBold' }]}>Choose Goal</Text>
-              <GoalSelector />
-              <Text style={[styles.label, { fontFamily: 'Oswald_600SemiBold' }]}>Task Title</Text>
-              <TextInput 
-                style={[styles.input, { fontFamily: 'Oswald_600SemiBold' }]} 
-                placeholder="Explain the goal in one to two words." 
-                placeholderTextColor="#A0A0A0"
-              />
-            </>
-          )}
+      <Pressable style={styles.fullScreenContainer} onPress={onClose}>
+        <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
+        <Pressable onPress={(e) => e.stopPropagation()}>
+          <View style={styles.modalView}>
+            
+            <View style={styles.tabContainer}>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'goal' && styles.activeTab]} 
+                onPress={() => setActiveTab('goal')}
+              >
+                <Text style={[styles.tabText, activeTab === 'goal' && styles.activeTabText]}>NEW GOAL</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'task' && styles.activeTab]} 
+                onPress={() => setActiveTab('task')}
+              >
+                <Text style={[styles.tabText, activeTab === 'task' && styles.activeTabText]}>NEW TASK</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {activeTab === 'goal' ? (
+              <>
+                <Text style={styles.label}>Goal Title</Text>
+                <TextInput style={styles.input} placeholder="Get Promotion" placeholderTextColor="#BDBDBD" />
+              </>
+            ) : (
+              <>
+                <Text style={styles.label}>Choose Goal</Text>
+                <View style={styles.dropdown}>
+                  <Text style={styles.dropdownText}>Select one of your Summits</Text>
+                  <Ionicons name="chevron-down-outline" size={24} color="#333" />
+                </View>
+                <Text style={styles.label}>Task Title</Text>
+                <TextInput style={styles.input} placeholder="Explain the goal in one to two words." placeholderTextColor="#BDBDBD" />
+              </>
+            )}
 
-          <View style={styles.buttonRow}>
-            <Pressable
-              style={styles.button} // Apply generic button style here
-              onPress={onClose}
-            >
-              {/* Inner shadow overlay, adjusted for the wireframe's look */}
-              <View style={[styles.buttonInnerShadow, styles.buttonCancelShadow]} /> 
-              <Text style={[styles.textStyle, { fontFamily: 'Oswald_600SemiBold' }]}>Cancel</Text>
-            </Pressable>
-            <Pressable
-              style={styles.button} // Apply generic button style here
-            >
-              {/* Inner shadow overlay, adjusted for the wireframe's look */}
-              <View style={[styles.buttonInnerShadow, styles.buttonAddShadow]} /> 
-              <Text style={[styles.textStyle, { fontFamily: 'Oswald_600SemiBold' }]}>Add</Text>
-            </Pressable>
+            <View style={styles.buttonRow}>
+              <Pressable style={styles.button} onPress={onClose}>
+                <View style={styles.buttonInnerShadow} />
+                <Text style={styles.textStyle}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.button}>
+                <View style={styles.buttonInnerShadow} />
+                <Text style={styles.textStyle}>Add</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  centeredView: {
+  fullScreenContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    margin: 20,
     backgroundColor: 'white',
     borderRadius: 15,
     padding: 25,
+    paddingTop: 15,
     alignItems: 'stretch',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    width: '90%',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+    width: 350, 
   },
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 25,
+    justifyContent: 'space-around',
   },
   tab: {
-    flex: 1,
-    paddingBottom: 10,
+    minWidth: 100,
+    paddingBottom: 12,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#F2F2F2',
   },
   activeTab: {
-    borderBottomWidth: 2.5,
-    borderBottomColor: '#3177C9',
+    borderBottomWidth: 3,
+    borderBottomColor: '#000000',
   },
   tabText: {
     color: '#A0A0A0',
     fontSize: 14,
-    letterSpacing: 0.5,
+    fontFamily: 'Oswald_600SemiBold',
   },
   activeTabText: {
-    color: '#3177C9',
+    color: '#000000',
+    fontFamily: 'Oswald_600SemiBold',
   },
   label: {
-    marginBottom: 8,
-    fontSize: 20,
-    color: '#333',
+    fontFamily: 'Oswald_600SemiBold',
+    fontSize: 18,
+    color: '#000',
+    marginBottom: 10,
   },
   input: {
-    height: 50,
-    borderColor: '#D0D0D0',
+    width: '100%',
+    fontFamily: 'Oswald_600SemiBold',
+    height: 45,
+    borderColor: '#E0E0E0',
     borderWidth: 1,
     borderRadius: 8,
     marginBottom: 20,
-    paddingHorizontal: 10,
-    fontSize: 18,
+    paddingHorizontal: 15,
+    fontSize: 16,
     color: '#333',
   },
   dropdown: {
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    height: 50,
-    borderColor: '#D0D0D0',
+    height: 45,
+    borderColor: '#E0E0E0',
     borderWidth: 1,
     borderRadius: 8,
     marginBottom: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
   },
   dropdownText: {
-    color: '#A0A0A0',
-    fontSize: 18,
+    color: '#BDBDBD',
+    fontSize: 16,
+    fontFamily: 'Oswald_600SemiBold',
   },
   buttonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 10,
+    justifyContent: 'space-between',
+    marginTop: 15,
   },
-  button: { // THIS IS THE CONTAINER FOR THE BUTTON BACKGROUND AND SHADOW
-    borderRadius: 25,
-    flex: 0.45,
-    backgroundColor: '#50E3C2', // Both buttons are green as per wireframe
-    overflow: 'hidden', // Crucial for inner shadow
-    height: 50, // Set explicit height for sleekness
+  button: {
+    backgroundColor: '#50E3C2',
+    height: 48,
+    flex: 1,
+    marginHorizontal: 8,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 8,
-    // Outer shadow for the button itself (optional, can be removed if not desired)
+    overflow: 'hidden',
+    position: 'relative',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -187,17 +189,17 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  buttonInnerShadow: { // THIS CREATES THE INNER SHADOW EFFECT
+  buttonInnerShadow: {
     position: 'absolute',
+    top: 0,
     left: 0,
     right: 0,
-    height: 5, // Height of the shadow effect
-    backgroundColor: 'rgba(0,0,0,0.1)', // Color of the shadow
-    top: 0, // Position at the top for inner top shadow
+    height: '50%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   textStyle: {
     color: 'white',
-    fontSize: 20,
-    // We already apply Oswald font in the component for the Text element
+    fontSize: 18,
+    fontFamily: 'Oswald_600SemiBold',
   },
 });

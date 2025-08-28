@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, StatusBar, TextInput, TouchableOpacity, Pressable, Alert } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Feather';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { LinearGradient } from 'expo-linear-gradient';
-import { account, ID } from '../lib/appwrite'; // <-- Import Appwrite functions
+import { account, ID } from '../lib/appwrite';
 
 const HEADER_TITLE = () => (
   <Text
@@ -33,7 +33,6 @@ export default function SignUpScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
 
-  
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields.');
@@ -45,23 +44,16 @@ export default function SignUpScreen() {
     }
 
     try {
-      
       const newUser = await account.create(ID.unique(), email, password);
-      console.log('Account created:', newUser);
-
-     
       await account.createEmailPasswordSession(email, password);
-      
-      
       router.replace('/');
     } catch (error) {
-      console.error('Appwrite Signup Error:', error);
       Alert.alert('Error', error.message);
     }
   };
 
   if (!fontsLoaded) {
-    return <ActivityIndicator size="large" color="#FFFFFF" style={{flex: 1, backgroundColor: '#3B82F6'}} />;
+    return null;
   }
 
   return (
@@ -128,6 +120,14 @@ export default function SignUpScreen() {
             <TouchableOpacity style={styles.button} onPress={handleSignUp}>
               <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
+          </View>
+
+          {}
+          <View style={styles.signinContainer}>
+            <Text style={styles.signinText}>Already have an account? </Text>
+            <Pressable onPress={() => router.push('/login')}>
+              <Text style={[styles.signinText, styles.signinLink]}>Sign in here</Text>
+            </Pressable>
           </View>
           
         </View>
@@ -218,5 +218,18 @@ const styles = StyleSheet.create({
     fontFamily: 'Oswald_600SemiBold', 
     fontSize: 24, 
     color: '#FFFFFF' 
+  },
+ 
+  signinContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 15,
+  },
+  signinText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+  },
+  signinLink: {
+    fontWeight: 'bold',
   },
 });

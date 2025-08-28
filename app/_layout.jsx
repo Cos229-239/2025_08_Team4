@@ -1,4 +1,3 @@
-// app/_layout.jsx
 import { Tabs, useRouter, SplashScreen } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Text, View, ActivityIndicator, Pressable } from "react-native";
@@ -10,7 +9,7 @@ import { RightDrawerProvider, useRightDrawer } from "../components/RightDrawerCo
 import RightDrawer from "../components/RightDrawer";
 import GlobalProvider, { useGlobalContext } from "../context/GlobalProvider";
 import { useEffect, useState } from "react";
-import AddGoal from '../components//Buttons/AddGoal';
+import AddGoal from '../components/Buttons/AddGoal';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,12 +29,10 @@ const HEADER_TITLE = (txt) => (
   </Text>
 );
 
-function TabsContent() {
+function TabsContent({ onAddGoalPress }) {
   const router = useRouter();
   const { openDrawer } = useRightDrawer(); 
   const { isLoading, isLoggedIn } = useGlobalContext();
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
   const [fontsLoaded, fontError] = useFonts({ 
     Pacifico_400Regular,
     Oswald_600SemiBold,
@@ -58,13 +55,12 @@ function TabsContent() {
     }
   }, [isLoggedIn, isLoading, fontsLoaded]);
 
-
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
           headerTitleAlign: "center",
@@ -96,7 +92,7 @@ function TabsContent() {
               <PlusButton
                 {...props}
                 size={50}
-                onPress={() => setIsModalVisible(true)}
+                onPress={onAddGoalPress}
               />
             ),
           }}
@@ -118,19 +114,21 @@ function TabsContent() {
         <Tabs.Screen name="(drawer)" options={{ href: null, headerTitle: () => HEADER_TITLE("LucidPaths"), }} />
       </Tabs>
       <RightDrawer />
-      <AddGoal 
-        isVisible={isModalVisible} 
-        onClose={() => setIsModalVisible(false)} 
-      />
-    </>
+    </View>
   );
 }
 
 export default function Layout() {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
   return (
     <GlobalProvider>
       <RightDrawerProvider>
-        <TabsContent />
+        <TabsContent onAddGoalPress={() => setIsModalVisible(true)} />
+        <AddGoal 
+          isVisible={isModalVisible} 
+          onClose={() => setIsModalVisible(false)} 
+        />
       </RightDrawerProvider>
     </GlobalProvider>
   );
