@@ -9,7 +9,8 @@ import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import { RightDrawerProvider, useRightDrawer } from "../components/RightDrawerContext";
 import RightDrawer from "../components/RightDrawer";
 import GlobalProvider, { useGlobalContext } from "../context/GlobalProvider";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import AddGoal from '../components//Buttons/AddGoal';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -33,6 +34,7 @@ function TabsContent() {
   const router = useRouter();
   const { openDrawer } = useRightDrawer(); 
   const { isLoading, isLoggedIn } = useGlobalContext();
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({ 
     Pacifico_400Regular,
@@ -94,7 +96,7 @@ function TabsContent() {
               <PlusButton
                 {...props}
                 size={50}
-                onPress={() => router.push("/addgoal")}
+                onPress={() => setIsModalVisible(true)}
               />
             ),
           }}
@@ -116,6 +118,10 @@ function TabsContent() {
         <Tabs.Screen name="(drawer)" options={{ href: null, headerTitle: () => HEADER_TITLE("LucidPaths"), }} />
       </Tabs>
       <RightDrawer />
+      <AddGoal 
+        isVisible={isModalVisible} 
+        onClose={() => setIsModalVisible(false)} 
+      />
     </>
   );
 }
