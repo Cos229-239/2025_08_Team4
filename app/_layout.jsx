@@ -77,6 +77,7 @@ function TabsContent({ onAddGoalPress }) {
           name="index"
           options={{
             title: "Home",
+            tabBarLabel: "Home",
             headerTitle: () => HEADER_TITLE("LucidPaths"),
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home-outline" color={color} size={size} />
@@ -103,6 +104,7 @@ function TabsContent({ onAddGoalPress }) {
           name="menu"
           options={{
             headerShown: false,
+            tabBarLabel: "Menu",
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="menu" color={color} size={size} />
             ),
