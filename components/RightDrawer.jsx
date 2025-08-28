@@ -99,6 +99,15 @@ export default function RightDrawer() {
         >
           <Text>Placeholder</Text>
         </Pressable>
+        <Pressable 
+          onPress={() => {
+            closeDrawer();
+            router.push('/(drawer)/settings');
+          }} 
+          style={{ paddingVertical: 12 }}
+        >
+          <Text>Settings</Text>
+        </Pressable>
         {}
       </Animated.View>
     </View>
