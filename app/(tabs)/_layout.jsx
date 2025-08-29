@@ -16,6 +16,8 @@ const HEADER_TITLE = (txt) => (
   </Text>
 );
 
+
+
 export default function TabsLayout() {
   const router = useRouter();
   const { openDrawer } = useRightDrawer();
@@ -34,7 +36,7 @@ export default function TabsLayout() {
           name="index" 
           options={{ 
             title: "Home", 
-            tabBarLabel: "Home", // <-- THIS IS THE FIX
+            tabBarLabel: "Home", 
             headerTitle: () => HEADER_TITLE("LucidPaths"), 
             tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} /> 
           }} 
