@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Dimensions, Pressable, StyleSheet, View, Text } from "react-native";
 import { useRightDrawer } from "./RightDrawerContext";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useGlobalContext } from "../context/GlobalProvider";
 import { account } from "../lib/appwrite";
 
@@ -42,6 +42,11 @@ export default function RightDrawer() {
       console.error("Logout Error:", error);
       alert("Failed to log out");
     }
+  };
+
+  const navigate = (path) => {
+    closeDrawer();
+    router.push(path);
   };
 
   if (!visible) return null;
@@ -85,13 +90,18 @@ export default function RightDrawer() {
         }}
       >
         <Text style={{ fontWeight: "600", fontSize: 18, marginBottom: 30 }}>Menu</Text>
-        <Link href="/(drawer)/about" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
-          About
-        </Link>
-        <Link href="/(drawer)/placeholder" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
-          Placeholder
-        </Link>
+        <Pressable onPress={() => navigate('/about')} style={{ paddingVertical: 12 }}>
+          <Text>About</Text>
+        </Pressable>
+        <Pressable onPress={() => navigate('/placeholder')} style={{ paddingVertical: 12 }}>
+          <Text>Placeholder</Text>
+        </Pressable>
         
+        {}
+        <Pressable onPress={() => navigate('/(drawer)/settings')} style={{ paddingVertical: 12 }}>
+          <Text>Settings</Text>
+        </Pressable>
+
         <Pressable onPress={handleLogout} style={{ paddingVertical: 12 }}>
           <Text>Sign out</Text>
         </Pressable>

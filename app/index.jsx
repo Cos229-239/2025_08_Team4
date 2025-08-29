@@ -24,7 +24,6 @@ const HEADER_TITLE_COMPONENT = () => (
 );
 
 const { width: screenWidth } = Dimensions.get('window');
-const chartWidth = screenWidth - 32;
 const mountainChartHeight = 200;
 
 const MountainChart = () => {
@@ -134,10 +133,12 @@ export default function Home() {
         }}
       />
       <View style={styles.scrollContent}>
-        <View style={styles.sectionHeaderContainer}>
-          <Text style={styles.sectionTitle}>Daily Stand Up</Text>
-          <Ionicons name="filter-outline" size={24} color="#333" />
-        </View>
+        <Pressable onPress={() => router.push('dailystandup')}>
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionTitle}>Daily Stand Up</Text>
+            <Ionicons name="filter-outline" size={24} color="#333" />
+          </View>
+        </Pressable>
         <View style={[styles.sectionContainer, {marginBottom: 10}]}>
           <View style={styles.taskList}>
             {dailyTasks.map((task, index) => (
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   taskList: {
-   
+    
   },
   taskItem: {
     flexDirection: 'row',
