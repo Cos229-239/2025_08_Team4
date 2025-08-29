@@ -1,37 +1,55 @@
-// components/RightDrawer.jsx
 import { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Pressable, StyleSheet, View, Text, } from "react-native";
+import { Animated, Dimensions, Pressable, StyleSheet, View, Text } from "react-native";
 import { useRightDrawer } from "./RightDrawerContext";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
+import { useGlobalContext } from "../context/GlobalProvider";
+import { account } from "../lib/appwrite";
 
 const PANEL_WIDTH = Math.floor(Dimensions.get("window").width * 0.8);
 
 export default function RightDrawer() {
   const { isOpen, closeDrawer } = useRightDrawer();
+  const { setUser, setIsLoggedIn } = useGlobalContext();
+  const router = useRouter();
 
-  // animate slide and fade
-  const slideX = useRef(new Animated.Value(PANEL_WIDTH)).current; // off-screen right
-  const fade   = useRef(new Animated.Value(0)).current;           // backdrop opacity
-  const [visible, setVisible] = useState(false);                  // mount/unmount layer
+  const slideX = useRef(new Animated.Value(PANEL_WIDTH)).current;
+  const fade   = useRef(new Animated.Value(0)).current;
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      // mount then animate in
       setVisible(true);
       Animated.parallel([
         Animated.timing(slideX, { toValue: 0, duration: 150, useNativeDriver: true }),
         Animated.timing(fade,   { toValue: 1, duration: 700, useNativeDriver: true }),
       ]).start();
     } else {
-      // animate out then unmount so no shadow remains
       Animated.parallel([
         Animated.timing(slideX, { toValue: PANEL_WIDTH, duration: 200, useNativeDriver: true }),
-        Animated.timing(fade,   { toValue: 0,            duration: 100, useNativeDriver: true }),
+        Animated.timing(fade,   { toValue: 0,           duration: 100, useNativeDriver: true }),
       ]).start(({ finished }) => finished && setVisible(false));
     }
   }, [isOpen, slideX, fade]);
 
-  if (!visible) return null; // nothing rendered when closed
+  const handleLogout = async () => {
+    try {
+      await account.deleteSession("current");
+      setUser(null);
+      setIsLoggedIn(false);
+      closeDrawer();
+      router.replace("/welcomescreen");
+    } catch (error) {
+      console.error("Logout Error:", error);
+      alert("Failed to log out");
+    }
+  };
+
+  const navigate = (path) => {
+    closeDrawer();
+    router.push(path);
+  };
+
+  if (!visible) return null;
 
   return (
     <View
@@ -40,7 +58,7 @@ export default function RightDrawer() {
         { zIndex: 9999, elevation: 9999, pointerEvents: "auto" },
       ]}
     >
-      {/* Backdrop: covers entire screen except the drawer width on the right */}
+      {/* Backdrop */}
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
@@ -54,31 +72,39 @@ export default function RightDrawer() {
       {/* Drawer panel */}
       <Animated.View
         style={{
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: PANEL_WIDTH,
-    transform: [{ translateX: slideX }],
-    backgroundColor: "#E2FAF5",
-    zIndex: 10000,
-    elevation: 10000,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: -4, height: 0 },
-    paddingTop: 60,       // give space below notch/status bar
-    paddingHorizontal: 20 // consistent left/right padding
-  }}
+          position: "absolute",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: PANEL_WIDTH,
+          transform: [{ translateX: slideX }],
+          backgroundColor: "#E2FAF5",
+          zIndex: 10000,
+          elevation: 10000,
+          shadowColor: "#000",
+          shadowOpacity: 0.12,
+          shadowRadius: 10,
+          shadowOffset: { width: -4, height: 0 },
+          paddingTop: 60,
+          paddingHorizontal: 20
+        }}
       >
         <Text style={{ fontWeight: "600", fontSize: 18, marginBottom: 30 }}>Menu</Text>
-        <Link href="/(drawer)/about" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
-          About
-        </Link>
-        <Link href="/(drawer)/placeholder" onPress={closeDrawer} style={{ paddingVertical: 12 }}>
-          Placeholder
-        </Link>
-        {/* drawer content */}
+        <Pressable onPress={() => navigate('/about')} style={{ paddingVertical: 12 }}>
+          <Text>About</Text>
+        </Pressable>
+        <Pressable onPress={() => navigate('/placeholder')} style={{ paddingVertical: 12 }}>
+          <Text>Placeholder</Text>
+        </Pressable>
+        
+        {}
+        <Pressable onPress={() => navigate('/(drawer)/settings')} style={{ paddingVertical: 12 }}>
+          <Text>Settings</Text>
+        </Pressable>
+
+        <Pressable onPress={handleLogout} style={{ paddingVertical: 12 }}>
+          <Text>Sign out</Text>
+        </Pressable>
       </Animated.View>
     </View>
   );
