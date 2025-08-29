@@ -34,7 +34,7 @@ export default function TabsLayout() {
           name="index" 
           options={{ 
             title: "Home", 
-            tabBarLabel: "Home", 
+            tabBarLabel: "Home", // <-- THIS IS THE FIX
             headerTitle: () => HEADER_TITLE("LucidPaths"), 
             tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} /> 
           }} 
