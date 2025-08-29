@@ -4,7 +4,7 @@ import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts, Oswald_600SemiBold } from "@expo-google-fonts/oswald";
 import { Pacifico_400Regular } from "@expo-google-fonts/pacifico";
-import { useRightDrawer } from "../components/RightDrawerContext";
+import { useRightDrawer } from "../../components/RightDrawerContext";
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Text as SvgText, Defs, Stop, G, LinearGradient as SvgLinearGradient, Rect } from 'react-native-svg';
 

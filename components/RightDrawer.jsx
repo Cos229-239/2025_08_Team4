@@ -76,7 +76,7 @@ export default function RightDrawer() {
 
       <Animated.View style={[styles.drawerPanel, { transform: [{ translateX: slideX }] }]}>
         <LinearGradient
-          colors={['#6E6E85', '#C2DAF6', '#82B6F1']}
+          colors={['#60A3EF', '#A5F3E2', '#37CAA9']}
           locations={[0.1, 0.6, 1.0]}
           style={StyleSheet.absoluteFill}
         />

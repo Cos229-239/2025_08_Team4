@@ -1,113 +1,66 @@
-import { Tabs, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { Text, View, ActivityIndicator, Pressable } from "react-native";
-import PlusButton from "../components/Buttons/PlusButton";
+import { Stack, useRouter, SplashScreen } from "expo-router";
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
-import { RightDrawerProvider, useRightDrawer } from "../components/RightDrawerContext";
-import RightDrawer from "../components/RightDrawer";
-import { useState } from 'react';
-import AddGoal from '../components/Buttons/AddGoal';
+import { Oswald_600SemiBold } from '@expo-google-fonts/oswald';
+import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
+import GlobalProvider, { useGlobalContext } from "../context/GlobalProvider";
+import { useEffect } from "react";
+import { RightDrawerProvider } from "../components/RightDrawerContext";
 
+SplashScreen.preventAutoHideAsync();
 
-import GlobalProvider from "../context/GlobalProvider";
-
-const HEADER_STYLE = { backgroundColor: "#3177C9" };
-const HEADER_TITLE = (txt) => (
-  <Text
-    style={{
-      fontFamily: "Pacifico_400Regular",
-      fontSize: 40,
-      color: "#FFFFFF",
-      height: 85,
-      textAlignVertical: "center",
-      textAlign: "center",
-    }}
-  >
-    {txt}
-  </Text>
-);
-
-function TabsContent() {
+function RootLayoutNav() {
+  const { isLoading, isLoggedIn } = useGlobalContext();
   const router = useRouter();
-  const { openDrawer } = useRightDrawer(); 
-  const [fontsLoaded] = useFonts({ Pacifico_400Regular });
-  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  if (!fontsLoaded) {
-    return <ActivityIndicator />;
+  const [fontsLoaded, fontError] = useFonts({
+    Pacifico_400Regular,
+    Oswald_600SemiBold,
+    OpenSans_700Bold
+  });
+
+  useEffect(() => {
+    if (fontError) throw fontError;
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    
+    if (isLoading || !fontsLoaded) return;
+
+    if (isLoggedIn) {
+      router.replace('/(tabs)');
+    } else {
+      router.replace('/welcomescreen');
+    }
+  }, [isLoggedIn, isLoading, fontsLoaded]);
+
+  if (!fontsLoaded || isLoading) {
+    return null; 
   }
 
   return (
-    <>
-      <Tabs
-        screenOptions={{
-          headerTitleAlign: "center",
-          headerStyle: HEADER_STYLE,
-          headerTintColor: "#fff",
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: "Home",
-            tabBarLabel: "Home",
-            headerTitle: () => HEADER_TITLE("LucidPaths"),
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="home-outline" color={color} size={size} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="addgoal"
-          options={{
-            title: "Goal Worksheet",
-            headerTitle: () => HEADER_TITLE("Goal Worksheet"),
-            tabBarButton: (props) => (
-              <PlusButton
-                {...props}
-                size={50}
-                onPress={() => setIsModalVisible(true)}
-              />
-            ),
-          }}
-          listeners={{ tabPress: (e) => { e.preventDefault(); } }}
-        />
-        <Tabs.Screen
-          name="menu"
-          options={{
-            headerShown: false,
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="menu" color={color} size={size} />
-            ),
-            tabBarButton: (props) => (
-              <Pressable {...props} onPress={openDrawer} />
-            ),
-          }}
-          listeners={{ tabPress: (e) => { e.preventDefault(); openDrawer(); } }}
-        />
-        
-        {}
-        <Tabs.Screen name="(drawer)" options={{ href: null, headerShown: false }} />
-        <Tabs.Screen name="welcomescreen" options={{ href: null }} />
-        <Tabs.Screen name="signup" options={{ href: null }} />
-        <Tabs.Screen name="login" options={{ href: null }} />
-        <Tabs.Screen name="dailystandup" options={{ href: null }} /> 
-
-      </Tabs>
-      <RightDrawer />
-      <AddGoal 
-        isVisible={isModalVisible} 
-        onClose={() => setIsModalVisible(false)} 
-      />
-    </>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="welcomescreen" options={{ headerShown: false }} />
+      <Stack.Screen name="signup" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+    </Stack>
   );
-}
+};
 
-export default function Layout() {
+export default function RootLayout() {
   return (
     <GlobalProvider>
       <RightDrawerProvider>
-        <TabsContent />
+        {}
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+          <Stack.Screen name="welcomescreen" options={{ headerShown: false }} />
+          <Stack.Screen name="signup" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        </Stack>
       </RightDrawerProvider>
     </GlobalProvider>
   );
