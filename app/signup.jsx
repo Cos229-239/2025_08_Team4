@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, TextInput, TouchableOpacity, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, StatusBar, TextInput, TouchableOpacity, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Feather';
-import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { LinearGradient } from 'expo-linear-gradient';
 import { account, ID } from '../lib/appwrite';
+import { useGlobalContext } from '../context/GlobalProvider';
 
 const HEADER_TITLE = () => (
   <Text
@@ -23,6 +23,7 @@ const HEADER_TITLE = () => (
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const { setUser, setIsLoggedIn } = useGlobalContext();
   const [fontsLoaded] = useFonts({
     Oswald_600SemiBold,
     Pacifico_400Regular,
@@ -43,18 +44,20 @@ export default function SignUpScreen() {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
-
     try {
-      const newUser = await account.create(ID.unique(), email, password);
+      await account.create(ID.unique(), email, password);
       await account.createEmailPasswordSession(email, password);
-      router.replace('/');
+      const currentUser = await account.get();
+      setUser(currentUser);
+      setIsLoggedIn(true);
+      router.replace('/onboarding/step1');
     } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
 
   if (!fontsLoaded) {
-    return null;
+    return <ActivityIndicator />;
   }
 
   return (
@@ -70,12 +73,7 @@ export default function SignUpScreen() {
           headerTitle: () => HEADER_TITLE(),
           headerTransparent: true,
           headerTintColor: '#fff', 
-          headerShown: true,
-          headerLeft: () => (
-            <Pressable onPress={() => router.back()} style={{ marginLeft: 15 }}>
-              <Ionicons name="arrow-back-outline" size={24} color="#fff" />
-            </Pressable>
-          ),
+          headerTitleAlign: 'center',
         }}
       />
       
@@ -143,98 +141,18 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1 
-  },
-  safeArea: { 
-    flex: 1, 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  form: { 
-    width: '85%' 
-  },
-  label: { 
-    fontFamily: 'Oswald_600SemiBold', 
-    fontSize: 24, 
-    color: '#FFFFFF', 
-    lineHeight: 28, 
-    letterSpacing: -0.48, 
-    marginBottom: 8, 
-    textShadowColor: 'rgba(0, 0, 0, 0.75)', 
-    textShadowOffset: {width: -1, height: 1}, 
-    textShadowRadius: 10 
-  },
-  input: { 
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-    borderRadius: 10, 
-    paddingHorizontal: 15, 
-    paddingVertical: 12, 
-    fontSize: 16, 
-    color: '#111827', 
-    marginBottom: 30, 
-    borderWidth: 1, 
-    borderColor: '#000000' 
-  },
-  inputContainer: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-    borderRadius: 10, 
-    paddingHorizontal: 15, 
-    marginBottom: 15, 
-    borderWidth: 1, 
-    borderColor: '#000000' 
-  },
-  confirmPasswordInputContainer: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', 
-    borderRadius: 10, 
-    paddingHorizontal: 15, 
-    marginBottom: 20, 
-    borderWidth: 1, 
-    borderColor: '#000000' 
-  },
-  inputField: { 
-    flex: 1, 
-    paddingVertical: 12, 
-    fontSize: 16, 
-    color: '#111827' 
-  },
-  buttonContainer: { 
-    width: '100%', 
-    alignItems: 'center' 
-  },
-  button: { 
-    backgroundColor: '#004496', 
-    height: 43, 
-    width: 130, 
-    borderRadius: 24, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    marginTop: 20, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.30, 
-    shadowRadius: 4.65, 
-    elevation: 8 
-  },
-  buttonText: { 
-    fontFamily: 'Oswald_600SemiBold', 
-    fontSize: 24, 
-    color: '#FFFFFF' 
-  },
-  signinContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 15,
-  },
-  signinText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-  },
-  signinLink: {
-    fontWeight: 'bold',
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  form: { width: '85%' },
+  label: { fontFamily: 'Oswald_600SemiBold', fontSize: 24, color: '#FFFFFF', lineHeight: 28, letterSpacing: -0.48, marginBottom: 8, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: -1, height: 1}, textShadowRadius: 10 },
+  input: { backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#111827', marginBottom: 30, borderWidth: 1, borderColor: '#000000' },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, marginBottom: 15, borderWidth: 1, borderColor: '#000000' },
+  confirmPasswordInputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, marginBottom: 20, borderWidth: 1, borderColor: '#000000' },
+  inputField: { flex: 1, paddingVertical: 12, fontSize: 16, color: '#111827' },
+  buttonContainer: { width: '100%', alignItems: 'center' },
+  button: { backgroundColor: '#004496', height: 43, width: 130, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginTop: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.30, shadowRadius: 4.65, elevation: 8 },
+  buttonText: { fontFamily: 'Oswald_600SemiBold', fontSize: 24, color: '#FFFFFF' },
+  signinContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 15 },
+  signinText: { color: '#FFFFFF', fontSize: 14 },
+  signinLink: { fontWeight: 'bold' },
 });
