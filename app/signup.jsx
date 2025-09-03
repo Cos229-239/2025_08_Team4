@@ -50,7 +50,7 @@ export default function SignUpScreen() {
       const currentUser = await account.get();
       setUser(currentUser);
       setIsLoggedIn(true);
-      router.replace('/onboarding/step1');
+      router.replace('/onboarding/step');
     } catch (error) {
       Alert.alert('Error', error.message);
     }
