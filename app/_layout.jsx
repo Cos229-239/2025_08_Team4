@@ -9,7 +9,7 @@ import { RightDrawerProvider } from "../components/RightDrawerContext";
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  // STEP 1: Get the 'user' object from your context
+  
   const { isLoading, isLoggedIn, user } = useGlobalContext();
   const router = useRouter();
 
@@ -25,29 +25,22 @@ function RootLayoutNav() {
   }, [fontsLoaded, fontError]);
 
   useEffect(() => {
-    if (isLoading ||!fontsLoaded) return;
-
-    // STEP 2: This is the new, smarter redirect logic
-    if (isLoggedIn) {
-      // Check a preference on the user object (e.g., from Appwrite)
-      const hasCompletedOnboarding = user?.prefs?.hasCompletedOnboarding || false;
-
-      if (hasCompletedOnboarding) {
-        // If they finished onboarding, go to the main app
-        router.replace('/(tabs)');
-      } else {
-        // If they haven't, send them to onboarding
-        router.replace('/onboarding/step');
-      }
+    if (isLoading || !fontsLoaded) return;
+    
+    if (isLoggedIn && user?.prefs?.onboardingCompleted) {
+      // If logged in AND onboarding is complete, go to the main app
+      router.replace('/(tabs)');
+    } else if (isLoggedIn && !user?.prefs?.onboardingCompleted) {
+      // If logged in BUT onboarding is NOT complete, go to onboarding
+      router.replace('/onboarding/step1');
     } else {
-      // If not logged in, go to the welcome screen
+      // If not logged in at all, go to the welcome screen
       router.replace('/welcomescreen');
     }
-    // Add 'user' to the dependency array so this runs when the user object updates
   }, [isLoggedIn, isLoading, fontsLoaded, user]);
 
   if (!fontsLoaded || isLoading) {
-    return null; 
+    return null;
   }
 
   return (
@@ -57,7 +50,6 @@ function RootLayoutNav() {
       <Stack.Screen name="signup" options={{ headerShown: true }} />
       <Stack.Screen name="login" options={{ headerShown: true }} />
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-      {/* STEP 3: Make sure the onboarding route is defined here */}
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
     </Stack>
   );
