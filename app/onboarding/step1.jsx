@@ -251,12 +251,12 @@ const OnboardingStep1 = () => {
   ]);
 
   const handleContinue = () => {
-    // --- VALIDATION CHECK ---
+ 
     if (!name.trim() || !languageValue || !pronounsValue || !countryValue) {
       Alert.alert("Incomplete", "Please fill out all fields to continue.");
-      return; // Stop the function here if fields are not filled
+      return; 
     }
-    // ------------------------
+    
 
     console.log('User Info:', {
       name: name,

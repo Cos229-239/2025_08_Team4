@@ -28,13 +28,13 @@ function RootLayoutNav() {
     if (isLoading || !fontsLoaded) return;
     
     if (isLoggedIn && user?.prefs?.onboardingCompleted) {
-      // If logged in AND onboarding is complete, go to the main app
+      
       router.replace('/(tabs)');
     } else if (isLoggedIn && !user?.prefs?.onboardingCompleted) {
-      // If logged in BUT onboarding is NOT complete, go to onboarding
+      
       router.replace('/onboarding/step1');
     } else {
-      // If not logged in at all, go to the welcome screen
+      
       router.replace('/welcomescreen');
     }
   }, [isLoggedIn, isLoading, fontsLoaded, user]);
