@@ -44,10 +44,21 @@ export default function DrawerLayout() {
           ),
         }} 
       />
+      <Stack.Screen 
+        name="about" 
+        options={{ 
+          headerTitle: () => HEADER_TITLE("About LucidPaths"),
+          headerLeft: () => (
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="white" />
+            </Pressable>
+          ),
+        }} 
+      />
     <Stack.Screen 
         name="placeholder" 
         options={{ 
-          headerTitle: () => HEADER_TITLE("PlaceHolder"),
+          headerTitle: () => HEADER_TITLE("Test DB Connection"),
           headerLeft: () => (
             <Pressable style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={24} color="white" />

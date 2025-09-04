@@ -9,6 +9,13 @@ const GlobalProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+async function fetchUser() {
+
+    const current = await account.get();
+    setIsLoggedIn(true);
+    setUser(current);
+    return current;
+    }
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -32,6 +39,8 @@ const GlobalProvider = ({ children }) => {
 
     checkSession();
   }, []);
+
+
 
   return (
     <GlobalContext.Provider
