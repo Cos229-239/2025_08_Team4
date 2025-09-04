@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isTwoFactor, setIsTwoFactor] = useState(false);
   const [isPushNotifications, setIsPushNotifications] = useState(true);
@@ -49,7 +51,7 @@ export default function SettingsScreen() {
           <SettingItem
             title="Edit Profile"
             subtitle="Update your personal information"
-            onPress={() => {}}
+            onPress={() => router.push('/(drawer)/editprofile')}
           />
           <SettingItem
             title="Change Password"

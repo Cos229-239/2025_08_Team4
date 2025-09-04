@@ -44,6 +44,17 @@ export default function DrawerLayout() {
           ),
         }} 
       />
+      <Stack.Screen 
+        name="editprofile" 
+        options={{ 
+          headerTitle: () => HEADER_TITLE("Edit Profile"),
+          headerLeft: () => (
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="white" />
+            </Pressable>
+          ),
+        }} 
+      />
     </Stack>
   );
 }
