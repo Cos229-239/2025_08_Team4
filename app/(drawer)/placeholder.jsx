@@ -1,4 +1,4 @@
-// app/(drawer)/placeholder.jsx
+
 import React, { useState } from "react";
 import {
   View,
@@ -19,10 +19,8 @@ export default function TestDataPort() {
   const { isLoggedIn, isLoading, logSession } = useGlobalContext();
 
   const [goalTitle, setGoalTitle] = useState("Test Goal");
-  const [taskATitle, setTaskATitle] = useState("Write outline");
-  const [taskBTitle, setTaskBTitle] = useState("Draft chapter");
-  const [lagMinutes, setLagMinutes] = useState("0");
-  const [tagName, setTagName] = useState("");
+  const [successCriteria, setSuccessCriteria] = useState(""); 
+  const [targetDateStr, setTargetDateStr] = useState("");     
   const [log, setLog] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,125 +29,77 @@ export default function TestDataPort() {
     setLog((prev) => prev + (prev ? "\n" : "") + msg);
   }
 
+
+  function toIsoOrThrow(s) {
+    const m = /^\d{4}-\d{2}-\d{2}$/.exec((s || "").trim());
+    if (!m) throw new Error("Target date must be YYYY-MM-DD");
+
+    const iso = new Date(`${s}T00:00:00Z`).toISOString();
+    if (!iso) throw new Error("Invalid date");
+    return iso;
+  }
+
   async function onCheck() {
     setLoading(true);
     setError("");
     setLog("");
     try {
-      await logSession();
+      if (typeof logSession === "function") await logSession();
+
       const me = await account.get();
       append(`account.get(): OK -> ${me.$id}`);
       append(`DB_ID: ${DB_ID}`);
       append(`COLS: ${JSON.stringify(COL, null, 2)}`);
+
       await databases.listDocuments(DB_ID, COL.TASKS, []);
       append("Tasks collection OK.");
+
       await databases.listDocuments(DB_ID, COL.GOALS, []);
       append("Goals collection OK.");
+
       append("✅ Connection + IDs look good.");
     } catch (e) {
       setError(e?.message ?? "Unknown error");
       append(`ERROR: ${e?.message ?? "Unknown error"}`);
+      append("Tips:");
+      append("• 'Database not found' → DB_ID is wrong.");
+      append("• 'Collection not found' → a COL.* ID is wrong.");
+      append("• 'Project is not accessible in this region' → endpoint region mismatch.");
+      append("• 'Not authorized' (401) → no session; ensure login + platform IDs in Appwrite.");
     } finally {
       setLoading(false);
     }
   }
 
-  async function onSave() {
+  async function onSaveGoal() {
     setLoading(true);
     setError("");
     setLog("");
-
     try {
       const me = await account.get();
       const userId = me.$id;
       append(`User: ${userId}`);
 
+      const targetDateIso = toIsoOrThrow(targetDateStr);
+
       const goalDoc = await databases.createDocument(
         DB_ID,
         COL.GOALS,
         ID.unique(),
-        { ownerId: userId, title: goalTitle, status: "active" },
+        {
+          ownerId: userId,
+          title: goalTitle,
+          status: "active",
+          successCriteria: successCriteria || "Initial test criteria",
+          targetDate: targetDateIso,
+        },
         ownerPerms(userId)
       );
       append(`Goal created: ${goalDoc.$id}`);
-
-      const taskA = await databases.createDocument(
-        DB_ID,
-        COL.TASKS,
-        ID.unique(),
-        {
-          ownerId: userId,
-          title: taskATitle,
-          status: "todo",
-          goal: goalDoc.$id,
-          goalId: goalDoc.$id,
-        },
-        ownerPerms(userId)
-      );
-      append(`Task A created: ${taskA.$id}`);
-
-      const taskB = await databases.createDocument(
-        DB_ID,
-        COL.TASKS,
-        ID.unique(),
-        {
-          ownerId: userId,
-          title: taskBTitle,
-          status: "todo",
-          goal: goalDoc.$id,
-          goalId: goalDoc.$id,
-        },
-        ownerPerms(userId)
-      );
-      append(`Task B created: ${taskB.$id}`);
-
-      const dep = await databases.createDocument(
-        DB_ID,
-        COL.DEPS,
-        ID.unique(),
-        {
-          ownerId: userId,
-          task: taskB.$id,
-          taskId: taskB.$id,
-          dependsOn: taskA.$id,
-          dependsOnId: taskA.$id,
-          type: "finish_to_start",
-          lagMinutes: parseInt(lagMinutes || "0", 10) || 0,
-        },
-        ownerPerms(userId)
-      );
-      append(`Dependency created: ${dep.$id} (B depends on A)`);
-
-      if (tagName.trim()) {
-        const tag = await databases.createDocument(
-          DB_ID,
-          COL.TAGS,
-          ID.unique(),
-          { ownerId: userId, name: tagName.trim() },
-          ownerPerms(userId)
-        );
-        append(`Tag created: ${tag.$id} (${tag.name})`);
-
-        const tt = await databases.createDocument(
-          DB_ID,
-          COL.TASK_TAGS,
-          ID.unique(),
-          {
-            ownerId: userId,
-            task: taskB.$id,
-            taskId: taskB.$id,
-            tag: tag.$id,
-            tagId: tag.$id,
-          },
-          ownerPerms(userId)
-        );
-        append(`Tag attached to Task B: ${tt.$id}`);
-      }
-
-      append("✅ Done! Check Appwrite Console for new docs.");
+      append("✅ Done! Check Appwrite Console for the new goal.");
     } catch (e) {
-      console.error("Appwrite error", e.code, e.message, e.response);
       setError(e?.message ?? "Unknown error");
+      append(`ERROR: ${e?.message ?? "Unknown error"}`);
     } finally {
       setLoading(false);
     }
@@ -175,35 +125,39 @@ export default function TestDataPort() {
 
   return (
     <ScrollView contentContainerStyle={s.wrap}>
-      <Text style={s.h1}>Test Data Porting</Text>
+      <Text style={s.h1}>Create Goal (test)</Text>
 
       <Field label="Goal title">
         <TextInput style={s.input} value={goalTitle} onChangeText={setGoalTitle} />
       </Field>
-      <Field label="Task A (blocker) title">
-        <TextInput style={s.input} value={taskATitle} onChangeText={setTaskATitle} />
-      </Field>
-      <Field label="Task B (depends on A) title">
-        <TextInput style={s.input} value={taskBTitle} onChangeText={setTaskBTitle} />
-      </Field>
-      <Field label="Lag minutes (optional)">
+
+      <Field label='Success criteria (saved as "sucessCriteria")'>
         <TextInput
           style={s.input}
-          keyboardType="number-pad"
-          value={String(lagMinutes)}
-          onChangeText={setLagMinutes}
+          value={successCriteria}
+          onChangeText={setSuccessCriteria}
+          placeholder="e.g., Complete A & B"
         />
       </Field>
-      <Field label="Tag name (optional)">
-        <TextInput style={s.input} value={tagName} onChangeText={setTagName} placeholder="e.g., DeepWork" />
+
+      <Field label='Target date (YYYY-MM-DD)'>
+        <TextInput
+          style={s.input}
+          value={targetDateStr}
+          onChangeText={setTargetDateStr}
+          placeholder="e.g., 2025-12-31"
+          keyboardType="numbers-and-punctuation"
+          autoCapitalize="none"
+        />
       </Field>
 
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Pressable style={[s.btn, loading && s.btndis]} disabled={loading} onPress={onCheck}>
           {loading ? <ActivityIndicator /> : <Text style={s.btnText}>Check Connection</Text>}
         </Pressable>
-        <Pressable style={[s.btn, loading && s.btndis]} disabled={loading} onPress={onSave}>
-          {loading ? <ActivityIndicator /> : <Text style={s.btnText}>Save Test Data</Text>}
+
+        <Pressable style={[s.btn, loading && s.btndis]} disabled={loading} onPress={onSaveGoal}>
+          {loading ? <ActivityIndicator /> : <Text style={s.btnText}>Save Goal</Text>}
         </Pressable>
       </View>
 
@@ -250,7 +204,7 @@ const s = StyleSheet.create({
   },
   btndis: { opacity: 0.6 },
   btnText: { color: "white", fontWeight: "700" },
-  err: { color: "#c53030", marginTop: 10 },
+  err: { color: "tomato", marginTop: 10 },
   log: {
     fontFamily: Platform.select({ ios: "Menlo", android: "monospace" }),
     fontSize: 12,
