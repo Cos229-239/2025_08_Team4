@@ -9,7 +9,8 @@ import { account } from '../../lib/appwrite';
 
 export default function OnboardingStep4() {
   const router = useRouter();
-  const { user, setUser } = useGlobalContext();
+  const { isLoading, isLoggedIn, user, refresh, logSession } = useGlobalContext();
+
   const titleFadeAnim = useRef(new Animated.Value(0)).current;
   const buttonFadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -19,56 +20,53 @@ export default function OnboardingStep4() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
-      Animated.sequence([
-        Animated.timing(titleFadeAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(buttonFadeAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
+    if (!fontsLoaded) return;
+    Animated.sequence([
+      Animated.timing(titleFadeAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonFadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [fontsLoaded, titleFadeAnim, buttonFadeAnim]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    (async () => {
+      await logSession();
+    })();
+  }, [isLoading, isLoggedIn, user, logSession]);
 
   const handleFinishOnboarding = async () => {
     try {
-      if (user) {
-        await account.updatePrefs({
-          ...user.prefs,
-          onboardingCompleted: true,
-        });
-        setUser({ ...user, prefs: { ...user.prefs, onboardingCompleted: true } });
-      }
+      const me = await account.get();
+      await account.updatePrefs({
+        ...me.prefs,
+        onboardingCompleted: true,
+      });
+      await refresh();
       router.replace('/');
     } catch (error) {
-      console.error("Error updating user prefs:", error);
+      console.error('Error updating user prefs:', error);
     }
   };
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  if (!fontsLoaded || isLoading) return null;
 
   return (
-    <LinearGradient
-      colors={['#3177C9', '#30F0C8']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#3177C9', '#30F0C8']} style={styles.container}>
       <SafeAreaView style={styles.content}>
         <Animated.View style={{ opacity: titleFadeAnim }}>
           <Text style={styles.title}>Welcome to LucidPaths</Text>
         </Animated.View>
-        
+
         <Animated.View style={{ opacity: buttonFadeAnim, marginTop: 100 }}>
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleFinishOnboarding}
-          >
+          <TouchableOpacity style={styles.button} onPress={handleFinishOnboarding}>
             <Text style={styles.buttonText}>Start My Journey</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -78,21 +76,15 @@ export default function OnboardingStep4() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flex: 1 },
+  content: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   title: {
     fontFamily: 'Pacifico_400Regular',
     fontSize: 48,
     color: 'white',
     textAlign: 'center',
     textShadowColor: 'rgba(0, 0, 0, 0.25)',
-    textShadowOffset: {width: 0, height: 2},
+    textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 3,
   },
   button: {

@@ -2,7 +2,12 @@ import { databases, ID } from "../lib/appwrite";
 import { DB_ID, COL } from "../lib/ids";
 import { ownerPerms } from "../lib/perms";
 
+import { useUserId } from '../hooks/useUserId';
+import { ownerPerms } from '../lib/perms';
+
+
 export async function createTask(userId, task) {
+  const userId = useUserId();
   const doc = {
     ownerId: userId,
     title: task.title,
@@ -18,6 +23,7 @@ export async function createTask(userId, task) {
     goal: task.goal ?? null,                 // relationship
     goalId: task.goalId ?? task.goal ?? null // string for index not shown just tracked
   };
+  
   return databases.createDocument(DB_ID, COL.TASKS, ID.unique(), doc, ownerPerms(userId));
 }
 
