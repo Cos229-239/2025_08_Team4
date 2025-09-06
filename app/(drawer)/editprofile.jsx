@@ -45,10 +45,11 @@ export default function EditProfileScreen() {
     OpenSans_700Bold,
   });
 
-  // Form state
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+// Form state
+const [name, setName] = useState('');
+const [email, setEmail] = useState('');
+const [password, setPassword] = useState('');
+const [isLoading, setIsLoading] = useState(false);
 
   // Dropdown states
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -136,14 +137,20 @@ export default function EditProfileScreen() {
       Alert.alert('Error', 'Please enter your name.');
       return;
     }
-
+  
     if (!email.trim()) {
       Alert.alert('Error', 'Please enter your email address.');
       return;
     }
-
+  
+    // Check if email is changing and password is provided
+    if (email !== user.email && !password.trim()) {
+      Alert.alert('Error', 'Please enter your current password to change your email address.');
+      return;
+    }
+  
     setIsLoading(true);
-
+  
     try {
       // Update user preferences
       const prefs = {
@@ -152,18 +159,18 @@ export default function EditProfileScreen() {
         country: countryValue,
         onboardingCompleted: user?.prefs?.onboardingCompleted || false,
       };
-
-      // Update the user name and email in Appwrite
+  
+      // Update the users name in Appwrite
       await account.updateName(name.trim());
       
-      // Update email if it has changed
+      // Update email if it has changed (requires password)
       if (email !== user.email) {
-        await account.updateEmail(email.trim());
+        await account.updateEmail(email.trim(), password);
       }
-
+  
       // Update user preferences
       await account.updatePrefs(prefs);
-
+  
       // Update local user state
       const updatedUser = {
         ...user,
@@ -172,7 +179,7 @@ export default function EditProfileScreen() {
         prefs: prefs,
       };
       setUser(updatedUser);
-
+  
       Alert.alert('Success', 'Profile updated successfully!', [
         { text: 'OK', onPress: () => router.back() }
       ]);
@@ -184,7 +191,7 @@ export default function EditProfileScreen() {
     }
   };
 
-  // Handle font loading errors
+  // font loading errors
   if (fontError) {
     console.error('Font loading error:', fontError);
     return (
@@ -231,24 +238,38 @@ export default function EditProfileScreen() {
       
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           style={styles.keyboardAvoidingContainer}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          enabled={false}
         >
-          {}
-          <View style={styles.scrollView}>
-            <View style={styles.scrollContent}>
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true}
+            bounces={false}
+            overScrollMode="never"
+            keyboardDismissMode="on-drag"
+            scrollEventThrottle={16}
+          >
               <View style={styles.formContainer}>
                 <Text style={styles.sectionTitle}>Personal Information</Text>
                 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your full name"
-                    value={name}
-                    onChangeText={setName}
-                    placeholderTextColor="#9CA3AF"
-                  />
+                                  <TextInput
+                  style={styles.input}
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChangeText={setName}
+                  placeholderTextColor="#9CA3AF"
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  autoCorrect={false}
+                  autoComplete="name"
+                />
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -261,8 +282,31 @@ export default function EditProfileScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     placeholderTextColor="#9CA3AF"
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    autoCorrect={false}
+                    autoComplete="email"
                   />
                 </View>
+
+                 
+                {email !== user?.email && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Current Password (required for email change)</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your current password"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry={true}
+                      placeholderTextColor="#9CA3AF"
+                      returnKeyType="done"
+                      blurOnSubmit={true}
+                      autoCorrect={false}
+                      autoComplete="current-password"
+                    />
+                  </View>
+                )}
 
                 <Text style={styles.sectionTitle}>Preferences</Text>
 
@@ -280,6 +324,7 @@ export default function EditProfileScreen() {
                     dropDownContainerStyle={styles.dropdownContainer}
                     zIndex={3000}
                     zIndexInverse={1000}
+                    listMode="SCROLLVIEW"
                   />
                 </View>
 
@@ -297,6 +342,7 @@ export default function EditProfileScreen() {
                     dropDownContainerStyle={styles.dropdownContainer}
                     zIndex={2000}
                     zIndexInverse={2000}
+                    listMode="SCROLLVIEW"
                   />
                 </View>
 
@@ -314,6 +360,7 @@ export default function EditProfileScreen() {
                     dropDownContainerStyle={styles.dropdownContainer}
                     zIndex={1000}
                     zIndexInverse={3000}
+                    listMode="SCROLLVIEW"
                   />
                 </View>
 
@@ -329,8 +376,7 @@ export default function EditProfileScreen() {
                   )}
                 </TouchableOpacity>
               </View>
-            </View>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
@@ -388,7 +434,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingTop: 120,
-    paddingBottom: 40,
+    paddingBottom: 100,
     paddingHorizontal: 24,
   },
   formContainer: {
