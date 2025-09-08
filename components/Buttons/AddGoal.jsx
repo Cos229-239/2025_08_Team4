@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, TextInput, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 
-const GoalSelector = () => (
-  <View style={styles.dropdown}>
-    <Text style={styles.dropdownText}>Select one of your Summits</Text>
-    <Ionicons name="chevron-down-outline" size={24} color="#333" />
-  </View>
-);
+//change
+const sampleGoals = [
+  { id: '1', title: 'Climb Everest' },
+  { id: '2', title: 'Run Marathon' },
+  { id: '3', title: 'Learn React Native' },
+];
 
 export default function AddGoal({ isVisible, onClose }) {
   const [activeTab, setActiveTab] = useState('goal');
@@ -19,9 +19,23 @@ export default function AddGoal({ isVisible, onClose }) {
     OpenSans_700Bold,
   });
 
+//change
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [taskTitle, setTaskTitle] = useState('');
+
   if (!fontsLoaded) {
     return null;
   }
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const onSelectGoal = (goal) => {
+    setSelectedGoal(goal);
+    setDropdownOpen(false);
+  };
 
   return (
     <Modal
@@ -35,36 +49,70 @@ export default function AddGoal({ isVisible, onClose }) {
         <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
         <Pressable onPress={(e) => e.stopPropagation()}>
           <View style={styles.modalView}>
-            
+
             <View style={styles.tabContainer}>
-              <TouchableOpacity 
-                style={[styles.tab, activeTab === 'goal' && styles.activeTab]} 
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'goal' && styles.activeTab]}
                 onPress={() => setActiveTab('goal')}
               >
                 <Text style={[styles.tabText, activeTab === 'goal' && styles.activeTabText]}>NEW GOAL</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.tab, activeTab === 'task' && styles.activeTab]} 
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'task' && styles.activeTab]}
                 onPress={() => setActiveTab('task')}
               >
                 <Text style={[styles.tabText, activeTab === 'task' && styles.activeTabText]}>NEW TASK</Text>
               </TouchableOpacity>
             </View>
-            
+
             {activeTab === 'goal' ? (
               <>
                 <Text style={styles.label}>Goal Title</Text>
-                <TextInput style={styles.input} placeholder="Get Promotion" placeholderTextColor="#BDBDBD" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Get Promotion"
+                  placeholderTextColor="#BDBDBD"
+                />
               </>
             ) : (
               <>
                 <Text style={styles.label}>Choose Goal</Text>
-                <View style={styles.dropdown}>
-                  <Text style={styles.dropdownText}>Select one of your Summits</Text>
+                {/* Dropdown */}
+                <TouchableOpacity style={styles.dropdown} onPress={toggleDropdown}>
+                  <Text style={[styles.dropdownText, selectedGoal && { color: '#333' }]}>
+                    {selectedGoal ? selectedGoal.title : 'Select one of your Summits'}
+                  </Text>
                   <Ionicons name="chevron-down-outline" size={24} color="#333" />
-                </View>
+                </TouchableOpacity>
+
+                {dropdownOpen && (
+                  <View style={styles.dropdownList}>
+                    <FlatList
+                      data={sampleGoals}
+                      keyExtractor={(item) => item.id}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity
+                          style={styles.dropdownItem}
+                          onPress={() => onSelectGoal(item)}
+                        >
+                          <Text style={styles.dropdownItemText}>{item.title}</Text>
+                        </TouchableOpacity>
+                      )}
+                      ListEmptyComponent={
+                        <Text style={styles.dropdownItemText}>No goals available</Text>
+                      }
+                    />
+                  </View>
+                )}
+
                 <Text style={styles.label}>Task Title</Text>
-                <TextInput style={styles.input} placeholder="Explain the goal in one to two words." placeholderTextColor="#BDBDBD" />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Explain the goal in one to two words."
+                  placeholderTextColor="#BDBDBD"
+                  value={taskTitle}
+                  onChangeText={setTaskTitle}
+                />
               </>
             )}
 
@@ -103,7 +151,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 10,
-    width: 350, 
+    width: 350,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -157,13 +205,32 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderWidth: 1,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 0,
     paddingHorizontal: 15,
   },
   dropdownText: {
     color: '#BDBDBD',
     fontSize: 16,
     fontFamily: 'Oswald_600SemiBold',
+  },
+  dropdownList: {
+    maxHeight: 120,
+    borderColor: '#E0E0E0',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginBottom: 20,
+    backgroundColor: 'white',
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomColor: '#E0E0E0',
+    borderBottomWidth: 1,
+  },
+  dropdownItemText: {
+    fontFamily: 'Oswald_600SemiBold',
+    fontSize: 16,
+    color: '#333',
   },
   buttonRow: {
     flexDirection: 'row',

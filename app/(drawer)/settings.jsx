@@ -8,6 +8,9 @@ export default function SettingsScreen() {
   const [isPushNotifications, setIsPushNotifications] = useState(true);
   const [reminderFrequency, setReminderFrequency] = useState('daily');
 
+//change
+  const backgroundColor = isDarkMode ? '#002A7C' : '#FFFFFF';
+
   const SettingItem = ({ title, subtitle, onPress, showToggle, toggleValue, onToggleChange, showArrow = true, showFrequency = false, frequencyValue }) => (
     <Pressable style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingContent}>
@@ -35,7 +38,8 @@ export default function SettingsScreen() {
   );
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      //change
+    <ScrollView style={[styles.container, { backgroundColor }]} showsVerticalScrollIndicator={false}>
       <View style={styles.section}>
         <LinearGradient
           colors={['#3177C9', '#00C8C8']}
