@@ -1,4 +1,4 @@
-
+// app/(drawer)/placeholder.jsx
 import React, { useState } from "react";
 import {
   View,
@@ -10,7 +10,7 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import { account, databases, ID } from "../../lib/appwrite";
+import { account, databases, ID, Query } from "../../lib/appwrite";
 import { DB_ID, COL } from "../../lib/ids";
 import { ownerPerms } from "../../lib/perms";
 import { useGlobalContext } from "../../context/GlobalProvider";
@@ -19,8 +19,9 @@ export default function TestDataPort() {
   const { isLoggedIn, isLoading, logSession } = useGlobalContext();
 
   const [goalTitle, setGoalTitle] = useState("Test Goal");
-  const [successCriteria, setSuccessCriteria] = useState(""); 
-  const [targetDateStr, setTargetDateStr] = useState("");     
+  const [successCriteria, setSuccessCriteria] = useState(""); // saved as 'sucessCriteria' per your schema
+  const [targetDateStr, setTargetDateStr] = useState("");     // YYYY-MM-DD
+  const [tagsInput, setTagsInput] = useState("");             // comma-separated tags
   const [log, setLog] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,14 +30,10 @@ export default function TestDataPort() {
     setLog((prev) => prev + (prev ? "\n" : "") + msg);
   }
 
-
   function toIsoOrThrow(s) {
     const m = /^\d{4}-\d{2}-\d{2}$/.exec((s || "").trim());
     if (!m) throw new Error("Target date must be YYYY-MM-DD");
-
-    const iso = new Date(`${s}T00:00:00Z`).toISOString();
-    if (!iso) throw new Error("Invalid date");
-    return iso;
+    return new Date(`${s}T00:00:00Z`).toISOString();
   }
 
   async function onCheck() {
@@ -51,24 +48,66 @@ export default function TestDataPort() {
       append(`DB_ID: ${DB_ID}`);
       append(`COLS: ${JSON.stringify(COL, null, 2)}`);
 
-      await databases.listDocuments(DB_ID, COL.TASKS, []);
-      append("Tasks collection OK.");
-
       await databases.listDocuments(DB_ID, COL.GOALS, []);
       append("Goals collection OK.");
+
+      await databases.listDocuments(DB_ID, COL.TAGS, []);
+      append("Tags collection OK.");
+
+      await databases.listDocuments(DB_ID, COL.GOAL_TAGS, []);
+      append("Goal_Tags (join) collection OK.");
 
       append("✅ Connection + IDs look good.");
     } catch (e) {
       setError(e?.message ?? "Unknown error");
       append(`ERROR: ${e?.message ?? "Unknown error"}`);
       append("Tips:");
-      append("• 'Database not found' → DB_ID is wrong.");
+      append("• 'Database not found' → DB_ID is wrong (copy actual ID from Console).");
       append("• 'Collection not found' → a COL.* ID is wrong.");
       append("• 'Project is not accessible in this region' → endpoint region mismatch.");
       append("• 'Not authorized' (401) → no session; ensure login + platform IDs in Appwrite.");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function upsertTag({ userId, name }) {
+    const trimmed = name.trim();
+    if (!trimmed) return null;
+
+    const existing = await databases
+      .listDocuments(DB_ID, COL.TAGS, [
+        Query.equal("ownerId", userId),
+        Query.equal("name", trimmed),
+        Query.limit(1),
+      ])
+      .catch(() => ({ documents: [] }));
+
+    if (existing.documents.length > 0) return existing.documents[0];
+
+    return databases.createDocument(
+      DB_ID,
+      COL.TAGS,
+      ID.unique(),
+      { ownerId: userId, name: trimmed },
+      ownerPerms(userId)
+    );
+  }
+
+  async function attachGoalTag({ userId, goalId, tagId }) {
+    return databases.createDocument(
+      DB_ID,
+      COL.GOAL_TAGS, // make sure this constant exists in lib/ids
+      ID.unique(),
+      {
+        ownerId: userId,
+        goal: goalId,     // relationship field (if you added it)
+        goalId: goalId,   // shadow string you indexed
+        tag: tagId,       // relationship field
+        tagId: tagId,     // shadow string
+      },
+      ownerPerms(userId)
+    );
   }
 
   async function onSaveGoal() {
@@ -96,7 +135,28 @@ export default function TestDataPort() {
         ownerPerms(userId)
       );
       append(`Goal created: ${goalDoc.$id}`);
-      append("✅ Done! Check Appwrite Console for the new goal.");
+
+      const names = tagsInput
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+
+      if (names.length > 0) {
+        append(`Processing ${names.length} tag(s)...`);
+        for (const name of names) {
+          try {
+            const tag = await upsertTag({ userId, name });
+            if (tag) {
+              await attachGoalTag({ userId, goalId: goalDoc.$id, tagId: tag.$id });
+              append(`• Attached tag "${tag.name}"`);
+            }
+          } catch (e) {
+            append(`• Failed tag "${name}": ${e?.message ?? "unknown error"}`);
+          }
+        }
+      }
+
+      append("✅ Done! Check Appwrite Console for the new goal and its tags.");
     } catch (e) {
       setError(e?.message ?? "Unknown error");
       append(`ERROR: ${e?.message ?? "Unknown error"}`);
@@ -140,7 +200,7 @@ export default function TestDataPort() {
         />
       </Field>
 
-      <Field label='Target date (YYYY-MM-DD)'>
+      <Field label="Target date (YYYY-MM-DD)">
         <TextInput
           style={s.input}
           value={targetDateStr}
@@ -151,13 +211,23 @@ export default function TestDataPort() {
         />
       </Field>
 
+      <Field label="Tags (comma-separated)">
+        <TextInput
+          style={s.input}
+          value={tagsInput}
+          onChangeText={setTagsInput}
+          placeholder="e.g., Work, Personal, DeepWork"
+          autoCapitalize="none"
+        />
+      </Field>
+
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Pressable style={[s.btn, loading && s.btndis]} disabled={loading} onPress={onCheck}>
           {loading ? <ActivityIndicator /> : <Text style={s.btnText}>Check Connection</Text>}
         </Pressable>
 
         <Pressable style={[s.btn, loading && s.btndis]} disabled={loading} onPress={onSaveGoal}>
-          {loading ? <ActivityIndicator /> : <Text style={s.btnText}>Save Goal</Text>}
+          {loading ? <ActivityIndicator /> : <Text style={s.btnText}>Save Goal + Tags</Text>}
         </Pressable>
       </View>
 

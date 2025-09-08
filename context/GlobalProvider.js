@@ -61,7 +61,6 @@ export default function GlobalProvider({ children }) {
     })();
   }, []);
 
-  // 🔊 Also log on every auth state change
   useEffect(() => {
     if (isLoading) return;
     if (isLoggedIn && user) {

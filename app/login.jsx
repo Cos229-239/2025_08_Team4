@@ -5,26 +5,13 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { LinearGradient } from 'expo-linear-gradient';
-//import { account } from '../lib/appwrite';
 import { useGlobalContext } from '../context/GlobalProvider';
 
-const HEADER_TITLE = () => (
-  <Text
-    style={{
-      fontFamily: "Pacifico_400Regular",
-      fontSize: 36,
-      color: "#FFFFFF",
-      textAlign: "center",
-    }}
-  >
-    LucidPaths
-  </Text>
-);
-const LOGIN_SUCCESS_REDIRECT = '/'
+const LOGIN_SUCCESS_REDIRECT = '/';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn } = useGlobalContext(); // ✅ use provider helper
+  const { signIn } = useGlobalContext();
   const [fontsLoaded] = useFonts({ Oswald_600SemiBold, Pacifico_400Regular });
 
   const [email, setEmail] = useState('');
@@ -39,7 +26,7 @@ export default function LoginScreen() {
     }
     try {
       setBusy(true);
-      await signIn(email, password);     // ✅ creates session + updates context
+      await signIn(email, password);
       router.replace(LOGIN_SUCCESS_REDIRECT);
     } catch (error) {
       Alert.alert('Error', error?.message ?? 'Login failed');
@@ -60,10 +47,19 @@ export default function LoginScreen() {
     >
       <Stack.Screen
         options={{
-          headerTitle: () => <HEADER_TITLE />,
+          headerShown: true,
           headerTransparent: true,
+          headerTitle: '',
           headerTintColor: '#fff',
-          headerTitleAlign: 'center',
+          headerShadowVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.replace('/welcomescreen')}
+              style={{ paddingHorizontal: 12, paddingVertical: 8 }}
+            >
+              <Icon name="chevron-left" size={28} color="#fff" />
+            </TouchableOpacity>
+          ),
         }}
       />
 
@@ -91,7 +87,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity onPress={() => setIsPasswordVisible((v) => !v)}>
+            <TouchableOpacity onPress={() => setIsPasswordVisible(v => !v)}>
               <Icon name={isPasswordVisible ? 'eye-off' : 'eye'} size={22} color="#9CA3AF" />
             </TouchableOpacity>
           </View>

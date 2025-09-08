@@ -7,33 +7,19 @@ import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { LinearGradient } from 'expo-linear-gradient';
 import { account, ID } from '../lib/appwrite';
 import { useGlobalContext } from '../context/GlobalProvider';
-
-const HEADER_TITLE = () => (
-  <Text
-    style={{
-      fontFamily: "Pacifico_400Regular",
-      fontSize: 36,
-      color: "#FFFFFF",
-      textAlign: "center",
-    }}
-  >
-    LucidPaths
-  </Text>
-);
+import { getOrCreateProfile } from '../lib/profile';
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { setUser, setIsLoggedIn } = useGlobalContext();
-  const [fontsLoaded] = useFonts({
-    Oswald_600SemiBold,
-    Pacifico_400Regular,
-  });
+  const { refresh } = useGlobalContext();
 
+  const [fontsLoaded] = useFonts({ Oswald_600SemiBold, Pacifico_400Regular });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
@@ -44,39 +30,49 @@ export default function SignUpScreen() {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
+
     try {
+      setLoading(true);
       await account.create(ID.unique(), email, password);
       await account.createEmailPasswordSession(email, password);
-      const currentUser = await account.get();
-      setUser(currentUser);
-      setIsLoggedIn(true);
+      await getOrCreateProfile();
+      await refresh();
       router.replace('/onboarding/step1');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error?.message ?? 'Sign up failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!fontsLoaded) {
-    return <ActivityIndicator />;
-  }
+  if (!fontsLoaded) return <ActivityIndicator />;
 
   return (
-    <LinearGradient 
+    <LinearGradient
       colors={['#3177C9', '#30F0C8']}
       locations={[0.37, 0.61]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
     >
-      <Stack.Screen
-        options={{
-          headerTitle: () => HEADER_TITLE(),
-          headerTransparent: true,
-          headerTintColor: '#fff', 
-          headerTitleAlign: 'center',
-        }}
-      />
-      
+       <Stack.Screen
+              options={{
+                headerShown: true,
+                headerTransparent: true,
+                headerTitle: '',
+                headerTintColor: '#fff',
+                headerShadowVisible: false,
+                headerLeft: () => (
+                  <TouchableOpacity
+                    onPress={() => router.replace('/welcomescreen')}
+                    style={{ paddingHorizontal: 12, paddingVertical: 8 }}
+                  >
+                    <Icon name="chevron-left" size={28} color="#fff" />
+                  </TouchableOpacity>
+                ),
+              }}
+            />
+
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.form}>
@@ -122,8 +118,8 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-              <Text style={styles.buttonText}>Sign Up</Text>
+            <TouchableOpacity style={[styles.button, loading && { opacity: 0.7 }]} onPress={handleSignUp} disabled={loading}>
+              <Text style={styles.buttonText}>{loading ? 'Creating…' : 'Sign Up'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -133,7 +129,6 @@ export default function SignUpScreen() {
               <Text style={[styles.signinText, styles.signinLink]}>Sign in here</Text>
             </Pressable>
           </View>
-          
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -144,13 +139,64 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   form: { width: '85%' },
-  label: { fontFamily: 'Oswald_600SemiBold', fontSize: 24, color: '#FFFFFF', lineHeight: 28, letterSpacing: -0.48, marginBottom: 8, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: -1, height: 1}, textShadowRadius: 10 },
-  input: { backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#111827', marginBottom: 30, borderWidth: 1, borderColor: '#000000' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, marginBottom: 15, borderWidth: 1, borderColor: '#000000' },
-  confirmPasswordInputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, marginBottom: 20, borderWidth: 1, borderColor: '#000000' },
+  label: {
+    fontFamily: 'Oswald_600SemiBold',
+    fontSize: 24,
+    color: '#FFFFFF',
+    lineHeight: 28,
+    letterSpacing: -0.48,
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#111827',
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
+  confirmPasswordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#000000',
+  },
   inputField: { flex: 1, paddingVertical: 12, fontSize: 16, color: '#111827' },
   buttonContainer: { width: '100%', alignItems: 'center' },
-  button: { backgroundColor: '#004496', height: 43, width: 130, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginTop: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.30, shadowRadius: 4.65, elevation: 8 },
+  button: {
+    backgroundColor: '#004496',
+    height: 43,
+    width: 130,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
   buttonText: { fontFamily: 'Oswald_600SemiBold', fontSize: 24, color: '#FFFFFF' },
   signinContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 15 },
   signinText: { color: '#FFFFFF', fontSize: 14 },
