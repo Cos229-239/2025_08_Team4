@@ -56,7 +56,7 @@ export default function SettingsScreen() {
           <SettingItem
             title="Change Password"
             subtitle="Update your account password"
-            onPress={() => {}}
+            onPress={() => router.push('/(drawer)/changepassword')}
           />
           <SettingItem
             title="Two-Factor Authentication"
