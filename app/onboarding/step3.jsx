@@ -30,7 +30,7 @@ export default function OnboardingStep3() {
   const [reminderValue, setReminderValue] = useState(null);
   const [reminderItems, setReminderItems] = useState([
     { label: 'Daily', value: 'daily' },
-    { label: 'Every few days', value: 'fewDays' },
+    { label: 'Every few days', value: 'fewdays' },
     { label: 'Weekly', value: 'weekly' },
     { label: 'Monthly', value: 'monthly' },
   ]);

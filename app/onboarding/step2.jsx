@@ -13,7 +13,7 @@ const CheckboxItem = ({ label, isChecked, onToggle }) => (
   </TouchableOpacity>
 );
 
-// map display labels -> enum keys in Appwrite (profiles.barriers)
+
 const BARRIER_LABEL_TO_KEY = {
   'Lack of Motivation': 'lack_motivation',
   'Time Management Issues': 'time_mgmt',
@@ -45,7 +45,7 @@ const barriers = Object.keys(BARRIER_LABEL_TO_CODE);
     return;
   }
 
-  // map labels -> short codes required by Appwrite
+
   const barrierCodes = selectedBarriers
     .map((label) => BARRIER_LABEL_TO_CODE[label])
     .filter(Boolean);
@@ -53,7 +53,7 @@ const barriers = Object.keys(BARRIER_LABEL_TO_CODE);
   try {
     setSaving(true);
     await getOrCreateProfile();
-    await updateProfile({ barriers: barrierCodes }); // enum[]
+    await updateProfile({ barriers: barrierCodes }); 
     router.push("/onboarding/step3");
   } catch (e) {
     Alert.alert("Error", e?.message ?? "Failed to save your selections");

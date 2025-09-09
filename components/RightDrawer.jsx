@@ -7,7 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
 const PANEL_WIDTH = Math.floor(Dimensions.get("window").width * 0.8);
-const SIGN_OUT_REDIRECT = "/(auth)/welcomescreen"; // adjust if your public route differs
+const SIGN_OUT_REDIRECT = "/(auth)/welcomescreen";
 
 const DrawerLink = ({ href, text, iconName }) => {
   const router = useRouter();
@@ -19,7 +19,7 @@ const DrawerLink = ({ href, text, iconName }) => {
     router.push(href);
   };
 
-  // more robust active check across route groups
+
   const isActive = "/" + segments.join("/") === href;
 
   return (
@@ -32,7 +32,6 @@ const DrawerLink = ({ href, text, iconName }) => {
 
 export default function RightDrawer() {
   const { isOpen, closeDrawer } = useRightDrawer();
-  // ✅ use context user + signOut, no direct setters
   const { user, isLoggedIn, signOut } = useGlobalContext();
   const router = useRouter();
 
@@ -58,15 +57,15 @@ export default function RightDrawer() {
   const handleLogout = async () => {
     try {
       if (isLoggedIn) {
-        await signOut(); // clears Appwrite session + context state
+        await signOut();
       }
     } catch (err) {
-      // harmless if no active session; keep UX smooth
+
       console.warn("Logout warning:", err?.message);
     } finally {
       closeDrawer();
-      router.dismissAll();               // clear any stacked screens/modals
-      router.replace(SIGN_OUT_REDIRECT); // go to your public route
+      router.dismissAll();               
+      router.replace(SIGN_OUT_REDIRECT); 
     }
   };
 

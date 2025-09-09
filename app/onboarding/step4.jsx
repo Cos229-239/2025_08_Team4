@@ -37,35 +37,17 @@ export default function OnboardingStep4() {
   }, [isLoading, logSession]);
 
 const handleFinishOnboarding = async () => {
-  if (saving) return; // guard double taps
-  setSaving(true);
-
   try {
-    console.log('[Step4] start');
-    // 1) Ensure a profile exists and mark onboardingCompleted in the profiles table
-    const profile = await getOrCreateProfile();
-    console.log('[Step4] profile ready:', profile.$id);
+    await getOrCreateProfile();
     await updateProfile({ onboardingCompleted: true });
-    console.log('[Step4] profiles.onboardingCompleted = true');
-
-    // 2) Mirror to account prefs (RootLayout uses user.prefs.onboardingCompleted)
     try {
       const me = await account.get();
       await account.updatePrefs({ ...me.prefs, onboardingCompleted: true });
-      console.log('[Step4] account.prefs.onboardingCompleted = true');
-    } catch (err) {
-      // Not fatal if profile has been updated; just log
-      console.log('[Step4] prefs mirror failed:', err?.message);
-    }
-
-    // 3) Refresh global user and continue
+    } catch {}
     await refresh();
-    console.log('[Step4] refresh complete → navigating');
     router.replace('/');
-  } catch (error) {
-    console.error('Error finishing onboarding:', error);
-  } finally {
-    setSaving(false);
+  } catch (err) {
+    console.log('Finish onboarding error:', err);
   }
 };
 
