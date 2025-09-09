@@ -1,130 +1,100 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { account } from '../lib/appwrite';
-import { fetchMyProfile, getOrCreateProfile } from '../lib/profile';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import { account } from "../lib/appwrite";
+import { getOrCreateProfile } from "../lib/profile";
 
 const GlobalContext = createContext(null);
 export const useGlobalContext = () => useContext(GlobalContext);
 
 export default function GlobalProvider({ children }) {
-
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
 
- 
   const [profile, setProfile] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-
-  const refreshAuth = async () => {
-    const me = await account.get();
-    setUser(me);
-    setIsLoggedIn(true);
-    console.log(`[AUTH] refreshAuth OK userId=${me.$id}`);
-    return me;
-
-  };
-
-  const signIn = async (email, password) => {
-    const current = await account.get().catch(() => null);
-    if (current && (current.email || '').toLowerCase() !== (email || '').toLowerCase()) {
-      try { await account.deleteSession('current'); } catch {}
+  const loadProfile = useCallback(async () => {
+    setProfileLoading(true);
+    try {
+      const p = await getOrCreateProfile();
+      setProfile(p);
+      return p;
+    } finally {
+      setProfileLoading(false);
     }
-    if (!current || (current.email || '').toLowerCase() !== (email || '').toLowerCase()) {
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const me = await account.get();
+      setUser(me);
+      setIsLoggedIn(true);
+    } catch {
+      setUser(null);
+      setIsLoggedIn(false);
+      setProfile(null);
+      setProfileLoading(false);
+      throw new Error("No session");
+    }
+    await loadProfile();
+  }, [loadProfile]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await refresh();
+      } catch {}
+      finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [refresh]);
+
+  const signIn = useCallback(async (email, password) => {
+    try {
+      await account.createEmailPasswordSession(email, password);
+    } catch {
+      await account.deleteSession("current").catch(() => {});
       await account.createEmailPasswordSession(email, password);
     }
-    await refreshAuth();
-    await ensureProfile();
-  };
+    await refresh();
+  }, [refresh]);
 
-  const signInAnon = async () => {
-    const cur = await account.get().catch(() => null);
-    if (!cur) await account.createAnonymousSession();
-    await refreshAuth();
-    await ensureProfile();
-  };
+  const signInAnon = useCallback(async () => {
+    await account.createAnonymousSession();
+    await refresh();
+  }, [refresh]);
 
-  const signOut = async () => {
-    try { await account.deleteSession('current'); } catch {}
+  const signOut = useCallback(async () => {
+    await account.deleteSession("current").catch(() => {});
     setUser(null);
     setIsLoggedIn(false);
     setProfile(null);
-    console.log('[AUTH] signed out');
-  };
+  }, []);
 
-  const logSession = async () => {
+  const logSession = useCallback(async () => {
     try {
       const me = await account.get();
       console.log(`[AUTH] session: TRUE userId=${me.$id}`);
       return me;
     } catch (e) {
-      console.log(`[AUTH] session: FALSE (${e?.message})`);
+      console.log(`[AUTH] session: FALSE (${e.message})`);
       return null;
     }
-  };
-
-  const refreshProfile = async () => {
-    if (!isLoggedIn) return null;
-    setProfileLoading(true);
-    try {
-      const p = await fetchMyProfile();
-      setProfile(p);
-      console.log('[PROFILE] refreshProfile ->', p ? p.$id : 'null');
-      return p;
-    } catch (e) {
-      console.log('[PROFILE] refreshProfile error:', e?.message);
-      return null;
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  const ensureProfile = async () => {
-    if (!isLoggedIn) return null;
-    setProfileLoading(true);
-    try {
-      const p = await getOrCreateProfile();
-      setProfile(p);
-      console.log('[PROFILE] ensureProfile ->', p.$id);
-      return p;
-    } catch (e) {
-      console.log('[PROFILE] ensureProfile error:', e?.message);
-      return null;
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    (async () => {
-      try {
-        await refreshAuth();      
-        await refreshProfile();   
-      } catch {
-        setUser(null);
-        setIsLoggedIn(false);
-        setProfile(null);
-        console.log('[AUTH] bootstrap: no session');
-      } finally {
-        setIsLoading(false);
-      }
-    })();
   }, []);
 
   const value = useMemo(() => ({
     isLoading,
     isLoggedIn,
     user,
-    refresh: refreshAuth,
+    profile,
+    profileLoading,
     signIn,
     signInAnon,
     signOut,
+    refresh,
     logSession,
-    profile,
-    profileLoading,
-    refreshProfile,
-    ensureProfile,
-  }), [isLoading, isLoggedIn, user, profile, profileLoading]);
+  }), [isLoading, isLoggedIn, user, profile, profileLoading, signIn, signInAnon, signOut, refresh, logSession]);
 
   return <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>;
 }
