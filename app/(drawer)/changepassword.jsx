@@ -19,6 +19,7 @@ import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 const HEADER_TITLE = () => (
   <Text
@@ -90,12 +91,14 @@ export default function ChangePasswordScreen() {
       <Stack.Screen
         options={{
           headerTitle: () => HEADER_TITLE(),
-          headerTransparent: true,
+          headerShown: true,
+          headerTransparent: false,
+          headerStyle: { backgroundColor: '#3177C9' },
           headerTintColor: '#fff',
           headerTitleAlign: 'center',
           headerLeft: () => (
             <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backButtonText}>← Back</Text>
+              <Ionicons name="chevron-back" size={24} color="white" />
             </Pressable>
           ),
         }}
@@ -279,7 +282,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: 120,
+    paddingTop: 20,
     paddingBottom: 100,
     paddingHorizontal: 24,
   },
@@ -295,17 +298,14 @@ const styles = StyleSheet.create({
   },
   backButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  backButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: 'Oswald_600SemiBold',
+    borderWidth: 2,
+    borderColor: '#2A6BB8',
   },
   sectionTitle: {
     fontFamily: 'Oswald_600SemiBold',
