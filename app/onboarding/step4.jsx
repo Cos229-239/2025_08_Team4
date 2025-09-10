@@ -37,16 +37,25 @@ export default function OnboardingStep4() {
 
   const handleFinishOnboarding = async () => {
     try {
-      if (user) {
-        await account.updatePrefs({
-          ...user.prefs,
-          onboardingCompleted: true,
-        });
-        setUser({ ...user, prefs: { ...user.prefs, onboardingCompleted: true } });
-      }
+      
+      const newName = user.name;
+      
+      
+      await account.updateName(newName);
+
+      
+      await account.updatePrefs({
+        ...user.prefs,
+        onboardingCompleted: true,
+      });
+
+      
+      const updatedUser = await account.get();
+      setUser(updatedUser);
+
       router.replace('/');
     } catch (error) {
-      console.error("Error updating user prefs:", error);
+      console.error("Error finishing onboarding:", error);
     }
   };
 

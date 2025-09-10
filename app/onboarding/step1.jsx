@@ -258,12 +258,8 @@ const OnboardingStep1 = () => {
     }
     
 
-    console.log('User Info:', {
-      name: name,
-      pronouns: pronounsValue,
-      country: countryValue,
-      language: languageValue,
-    });
+   setUser({ ...user, name, prefs: { ...user.prefs, language: languageValue, pronouns: pronounsValue, country: countryValue } });
+   
     router.push('/onboarding/step2');
   };
 
