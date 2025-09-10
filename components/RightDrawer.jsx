@@ -98,6 +98,7 @@ export default function RightDrawer() {
           <DrawerLink href="/(drawer)/placeholder" text="Dashboard Overview" iconName="grid-outline" />
           <DrawerLink href="/(drawer)/settings" text="App Settings" iconName="options-outline" />
           <DrawerLink href="/(drawer)/ExampleScreen" text="Mountain View" iconName="image-outline" />
+          <DrawerLink href="/(drawer)/fullGoal" text="Goal Details" iconName="checkmark-done-outline" />
 
           <View style={styles.separator} />
           <Pressable style={styles.linkContainer} onPress={handleLogout}>
