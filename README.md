@@ -51,58 +51,9 @@ Coming soon…
 
 ---
 
-### 4) 🗄️ Appwrite Data Model (suggested)
-**Database:** `DB_ID`
+### 4) 🗄️ Appwrite Data Model
 
-**Collections & key attributes**
-- `profiles`
-  - `ownerId` (string, required, indexed)
-  - `email` (string)
-  - `name` (string)
-  - `language` (string; ISO code like `en`, `es`, …)
-  - `pronouns` (enum: `she/her`, `he/him`, `they/them`, `other`)
-  - `country` (string; ISO like `us`, `gb`, …)
-  - `timeSpentMonthly` (enum: `lt1`, `1-5`, `5-10`, `10+`)
-  - `timeGoalMonthly` (enum: `1-5`, `5-10`, `10-20`, `20+`)
-  - `reminderFrequency` (enum: `daily`, `fewDays`, `weekly`, `monthly`)
-  - `barriers` (enum[], codes: `LM`, `TMI`, `FOF`, `LOCG`, `P`, `SD`, `D`, `O`)
-  - `onboardingCompleted` (boolean)
-- `goals`
-  - `ownerId` (string, required)
-  - `title` (string, required)
-  - `successCriteria` (string, required)
-  - `targetDate` (datetime ISO8601)
-  - `status` (string; e.g. `active`, `done`, `archived`)
-- `tasks`
-  - `ownerId` (string, required)
-  - `title` (string, required)
-  - `status` (string; e.g. `todo`, `doing`, `done`)
-  - `goal` (relationship to `goals`) and/or `goalId` (shadow string for indexing)
-- `task_dependencies` (`deps`)
-  - `ownerId` (string, required)
-  - `task` / `taskId` (downstream)
-  - `dependsOn` / `dependsOnId` (upstream)
-  - `type` (enum: `finish_to_start`)
-  - `lagMinutes` (int)
-- `tags`
-  - `ownerId` (string, required)
-  - `name` (string, unique per owner)
-- `task_tags`
-  - `ownerId` (string, required)
-  - `task` / `taskId`
-  - `tag` / `tagId`
-- `goal_tags`
-  - `ownerId` (string, required)
-  - `goal` / `goalId`
-  - `tag` / `tagId`
-- `time_logs` *(optional / planned)*
-  - `ownerId`, `taskId`, `minutes`, `note`, timestamps
 
-**Permissions**
-- Collection-level: allow **Users** to **create/read/update/delete**
-- Document-level: set with `ownerPerms(userId)` so only the owner can access
-
----
 
 ## 🧠 Vision
 
