@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/splash-icon.png" width="200" alt="LucidPaths Logo" />
+  <img src="./assets/icon.png" width="200" alt="LucidPaths Logo" />
 </p>
 
 # 🌿 LucidPaths | Goals & Habits Coach
