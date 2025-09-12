@@ -46,11 +46,12 @@ export default function EditProfileScreen() {
     OpenSans_700Bold,
   });
 
-// Form state
+  // Form state
 const [name, setName] = useState('');
 const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
 const [isLoading, setIsLoading] = useState(false);
+const [showPassword, setShowPassword] = useState(false);
 
   // Dropdown states
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -290,22 +291,50 @@ const [isLoading, setIsLoading] = useState(false);
                   />
                 </View>
 
-                 
+                {/* Show email change info when email is being changed */}
+                {email !== user?.email && (
+                  <View style={styles.emailChangeContainer}>
+                    <Text style={styles.emailChangeTitle}>Email Change Confirmation</Text>
+                    <View style={styles.emailDisplayColumn}>
+                      <View style={styles.emailDisplayItem}>
+                        <Text style={styles.emailDisplayLabel}>Current Email:</Text>
+                        <Text style={styles.emailDisplayValue}>{user?.email || 'Not set'}</Text>
+                      </View>
+                      <View style={styles.emailDisplayItem}>
+                        <Text style={styles.emailDisplayLabel}>New Email:</Text>
+                        <Text style={styles.emailDisplayValue}>{email}</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
                 {email !== user?.email && (
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>Current Password (required for email change)</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Enter your current password"
-                      value={password}
-                      onChangeText={setPassword}
-                      secureTextEntry={true}
-                      placeholderTextColor="#9CA3AF"
-                      returnKeyType="done"
-                      blurOnSubmit={true}
-                      autoCorrect={false}
-                      autoComplete="current-password"
-                    />
+                    <View style={styles.passwordInputContainer}>
+                      <TextInput
+                        style={styles.passwordInput}
+                        placeholder="Enter your current password"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                        placeholderTextColor="#9CA3AF"
+                        returnKeyType="done"
+                        blurOnSubmit={true}
+                        autoCorrect={false}
+                        autoComplete="current-password"
+                      />
+                      <TouchableOpacity 
+                        style={styles.eyeButton}
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        <Ionicons 
+                          name={showPassword ? "eye-off" : "eye"} 
+                          size={20} 
+                          color="#666666" 
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
 
@@ -487,6 +516,25 @@ const styles = StyleSheet.create({
     fontFamily: 'OpenSans_700Bold',
     color: '#333333',
   },
+  passwordInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    paddingHorizontal: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 14,
+    fontSize: 16,
+    fontFamily: 'OpenSans_700Bold',
+    color: '#333333',
+  },
+  eyeButton: {
+    padding: 8,
+  },
   dropdown: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -519,5 +567,43 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontFamily: 'Oswald_600SemiBold',
+  },
+  emailChangeContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3177C9',
+  },
+  emailChangeTitle: {
+    fontFamily: 'Oswald_600SemiBold',
+    fontSize: 16,
+    color: '#333333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emailDisplayColumn: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  emailDisplayItem: {
+    width: '100%',
+  },
+  emailDisplayLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 4,
+    fontFamily: 'OpenSans_700Bold',
+  },
+  emailDisplayValue: {
+    fontSize: 14,
+    color: '#333333',
+    fontFamily: 'OpenSans_700Bold',
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
   },
 });
