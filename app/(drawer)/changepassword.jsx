@@ -20,6 +20,7 @@ import { Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { account } from '../../lib/appwrite';
 
 const HEADER_TITLE = () => (
   <Text
@@ -47,14 +48,120 @@ export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // Password visibility states
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleChangePassword = () => {
-    Alert.alert('Coming Soon', 'Password change functionality will be implemented soon!');
+  // Password validation functions
+  const validatePassword = (password) => {
+    const errors = [];
+    
+    if (password.length < 8) {
+      errors.push('At least 8 characters long');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Contains uppercase letters');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('Contains lowercase letters');
+    }
+    
+    if (!/\d/.test(password)) {
+      errors.push('Contains at least one number');
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('Contains at least one special character');
+    }
+    
+    return errors;
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!currentPassword.trim()) {
+      newErrors.currentPassword = 'Current password is required';
+    }
+    
+    if (!newPassword.trim()) {
+      newErrors.newPassword = 'New password is required';
+    } else {
+      const passwordErrors = validatePassword(newPassword);
+      if (passwordErrors.length > 0) {
+        newErrors.newPassword = passwordErrors.join(', ');
+      }
+    }
+    
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your new password';
+    } else if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (currentPassword === newPassword) {
+      newErrors.newPassword = 'New password must be different from current password';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChangePassword = async () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fix the highlighted fields before continuing.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      // Update password using Appwrite
+      await account.updatePassword(newPassword, currentPassword);
+      
+      Alert.alert(
+        'Success', 
+        'Your password has been updated successfully!', 
+        [
+          { 
+            text: 'OK', 
+            onPress: () => {
+              // Clear form
+              setCurrentPassword('');
+              setNewPassword('');
+              setConfirmPassword('');
+              router.back();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Password update error:', error);
+      
+      let errorMessage = 'Failed to update password. Please try again.';
+      
+      if (error.message) {
+        if (error.message.includes('Invalid credentials')) {
+          errorMessage = 'Current password is incorrect. Please try again.';
+          setErrors({ currentPassword: 'Current password is incorrect' });
+        } else if (error.message.includes('Password must be at least 8 characters')) {
+          errorMessage = 'Password must be at least 8 characters long.';
+          setErrors({ newPassword: 'Password must be at least 8 characters long' });
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -128,12 +235,20 @@ export default function ChangePasswordScreen() {
               
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Current Password</Text>
-                <View style={styles.passwordInputContainer}>
+                <View style={[
+                  styles.passwordInputContainer,
+                  errors.currentPassword && styles.inputError
+                ]}>
                   <TextInput
                     style={styles.passwordInput}
                     placeholder="Enter your current password"
                     value={currentPassword}
-                    onChangeText={setCurrentPassword}
+                    onChangeText={(text) => {
+                      setCurrentPassword(text);
+                      if (errors.currentPassword) {
+                        setErrors(prev => ({ ...prev, currentPassword: undefined }));
+                      }
+                    }}
                     secureTextEntry={!showCurrentPassword}
                     placeholderTextColor="#9CA3AF"
                     returnKeyType="next"
@@ -150,16 +265,27 @@ export default function ChangePasswordScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {errors.currentPassword && (
+                  <Text style={styles.errorText}>{errors.currentPassword}</Text>
+                )}
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>New Password</Text>
-                <View style={styles.passwordInputContainer}>
+                <View style={[
+                  styles.passwordInputContainer,
+                  errors.newPassword && styles.inputError
+                ]}>
                   <TextInput
                     style={styles.passwordInput}
                     placeholder="Enter your new password"
                     value={newPassword}
-                    onChangeText={setNewPassword}
+                    onChangeText={(text) => {
+                      setNewPassword(text);
+                      if (errors.newPassword) {
+                        setErrors(prev => ({ ...prev, newPassword: undefined }));
+                      }
+                    }}
                     secureTextEntry={!showNewPassword}
                     placeholderTextColor="#9CA3AF"
                     returnKeyType="next"
@@ -176,16 +302,27 @@ export default function ChangePasswordScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {errors.newPassword && (
+                  <Text style={styles.errorText}>{errors.newPassword}</Text>
+                )}
               </View>
 
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Confirm New Password</Text>
-                <View style={styles.passwordInputContainer}>
+                <View style={[
+                  styles.passwordInputContainer,
+                  errors.confirmPassword && styles.inputError
+                ]}>
                   <TextInput
                     style={styles.passwordInput}
                     placeholder="Confirm your new password"
                     value={confirmPassword}
-                    onChangeText={setConfirmPassword}
+                    onChangeText={(text) => {
+                      setConfirmPassword(text);
+                      if (errors.confirmPassword) {
+                        setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                      }
+                    }}
                     secureTextEntry={!showConfirmPassword}
                     placeholderTextColor="#9CA3AF"
                     returnKeyType="done"
@@ -202,6 +339,9 @@ export default function ChangePasswordScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {errors.confirmPassword && (
+                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                )}
               </View>
 
               {/* Password Requirements */}
@@ -339,6 +479,10 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5EA',
     paddingHorizontal: 16,
   },
+  inputError: {
+    borderColor: '#E74C3C',
+    borderWidth: 2,
+  },
   passwordInput: {
     flex: 1,
     paddingVertical: 14,
@@ -391,5 +535,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontFamily: 'Oswald_600SemiBold',
+  },
+  errorText: {
+    color: '#E74C3C',
+    fontSize: 14,
+    marginTop: 6,
+    fontFamily: 'OpenSans_700Bold',
   },
 });
