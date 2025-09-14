@@ -1,39 +1,24 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, TextInput, TouchableOpacity, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/Feather';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
-import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
-import { LinearGradient } from 'expo-linear-gradient';
-import { account, ID } from '../lib/appwrite';
+import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import { useGlobalContext } from '../context/GlobalProvider';
-
-const HEADER_TITLE = () => (
-  <Text
-    style={{
-      fontFamily: "Pacifico_400Regular",
-      fontSize: 36,
-      color: "#FFFFFF",
-      textAlign: "center",
-    }}
-  >
-    LucidPaths
-  </Text>
-);
+import { account, ID } from '../lib/appwrite';
+import { getOrCreateProfile } from '../lib/profile';
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { setUser, setIsLoggedIn } = useGlobalContext();
-  const [fontsLoaded] = useFonts({
-    Oswald_600SemiBold,
-    Pacifico_400Regular,
-  });
+  const { refresh } = useGlobalContext();
+  const [fontsLoaded] = useFonts({ Oswald_600SemiBold, OpenSans_700Bold });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword) {
@@ -44,115 +29,165 @@ export default function SignUpScreen() {
       Alert.alert('Error', 'Passwords do not match.');
       return;
     }
+
     try {
+      setLoading(true);
       await account.create(ID.unique(), email, password);
       await account.createEmailPasswordSession(email, password);
-      const currentUser = await account.get();
-      setUser(currentUser);
-      setIsLoggedIn(true);
+      await getOrCreateProfile();
+      await refresh();
       router.replace('/onboarding/step1');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error?.message ?? 'Sign up failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!fontsLoaded) {
-    return <ActivityIndicator />;
-  }
+  if (!fontsLoaded) return <ActivityIndicator />;
 
   return (
-    <LinearGradient 
-      colors={['#3177C9', '#30F0C8']}
-      locations={[0.37, 0.61]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <Stack.Screen
-        options={{
-          headerTitle: () => HEADER_TITLE(),
-          headerTransparent: true,
-          headerTintColor: '#fff', 
-          headerTitleAlign: 'center',
-        }}
-      />
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="dark-content" />
       
-      <StatusBar barStyle="light-content" />
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.form}>
-          <Text style={styles.label}>Email Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Someone@example.com"
-            placeholderTextColor="#9CA3AF"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
+      <View style={styles.content}>
+        <Text style={styles.title}>Hello!</Text>
+        <Text style={styles.subtitle}>Register to get started.</Text>
 
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your email"
+          placeholderTextColor="#8A8A8E"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
+        
+        <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputField}
-              placeholder="********"
-              placeholderTextColor="#9CA3AF"
+              placeholder="Enter your password"
+              placeholderTextColor="#8A8A8E"
               secureTextEntry={!isPasswordVisible}
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+            <TouchableOpacity onPress={() => setIsPasswordVisible(v => !v)}>
               <Icon name={isPasswordVisible ? 'eye-off' : 'eye'} size={22} color="#9CA3AF" />
             </TouchableOpacity>
-          </View>
+        </View>
 
-          <Text style={styles.label}>Confirm Password</Text>
-          <View style={styles.confirmPasswordInputContainer}>
+        <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputField}
-              placeholder="********"
-              placeholderTextColor="#9CA3AF"
+              placeholder="Confirm your password"
+              placeholderTextColor="#8A8A8E"
               secureTextEntry={!isConfirmPasswordVisible}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
             />
-            <TouchableOpacity onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}>
+            <TouchableOpacity onPress={() => setIsConfirmPasswordVisible(v => !v)}>
               <Icon name={isConfirmPasswordVisible ? 'eye-off' : 'eye'} size={22} color="#9CA3AF" />
             </TouchableOpacity>
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-              <Text style={styles.buttonText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.signinContainer}>
-            <Text style={styles.signinText}>Already have an account? </Text>
-            <Pressable onPress={() => router.push('/login')}>
-              <Text style={[styles.signinText, styles.signinLink]}>Sign in here</Text>
-            </Pressable>
-          </View>
-          
         </View>
-      </SafeAreaView>
-    </LinearGradient>
+
+        <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
+        </TouchableOpacity>
+
+        <View style={styles.signinContainer}>
+          <Text style={styles.signinText}>Already have an account? </Text>
+          <Pressable onPress={() => router.push('/login')}>
+            <Text style={[styles.signinText, styles.signinLink]}>Login Now</Text>
+          </Pressable>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  form: { width: '85%' },
-  label: { fontFamily: 'Oswald_600SemiBold', fontSize: 24, color: '#FFFFFF', lineHeight: 28, letterSpacing: -0.48, marginBottom: 8, textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: {width: -1, height: 1}, textShadowRadius: 10 },
-  input: { backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, color: '#111827', marginBottom: 30, borderWidth: 1, borderColor: '#000000' },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, marginBottom: 15, borderWidth: 1, borderColor: '#000000' },
-  confirmPasswordInputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: 10, paddingHorizontal: 15, marginBottom: 20, borderWidth: 1, borderColor: '#000000' },
-  inputField: { flex: 1, paddingVertical: 12, fontSize: 16, color: '#111827' },
-  buttonContainer: { width: '100%', alignItems: 'center' },
-  button: { backgroundColor: '#004496', height: 43, width: 130, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginTop: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.30, shadowRadius: 4.65, elevation: 8 },
-  buttonText: { fontFamily: 'Oswald_600SemiBold', fontSize: 24, color: '#FFFFFF' },
-  signinContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 15 },
-  signinText: { color: '#FFFFFF', fontSize: 14 },
-  signinLink: { fontWeight: 'bold' },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  title: {
+    fontFamily: 'Oswald_600SemiBold',
+    fontSize: 32,
+    color: '#37CAA9',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontFamily: 'OpenSans_700Bold',
+    fontSize: 16,
+    color: '#8A8A8E',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  input: {
+    backgroundColor: '#F7F7F7',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
+    fontSize: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F7F7F7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  inputField: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: '#37CAA9',
+    paddingVertical: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 24,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontFamily: 'OpenSans_700Bold',
+  },
+  signinContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+  signinText: {
+    color: '#8A8A8E',
+    fontSize: 14,
+  },
+  signinLink: {
+    color: '#3177C9',
+    fontWeight: 'bold',
+  },
 });
