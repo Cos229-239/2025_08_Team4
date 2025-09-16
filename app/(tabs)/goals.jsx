@@ -6,7 +6,7 @@ import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-m
 import { listMyGoals } from "../../lib/goalRepo";
 import SnowyMountain from "../../components/SnowyMountain";
 
-// Helper function to format dates
+
 function formatDueDate(isoString) {
   if (!isoString) return 'No due date';
   const date = new Date(isoString);
@@ -14,7 +14,7 @@ function formatDueDate(isoString) {
   return `Due by ${date.toLocaleDateString('en-US', options)}`;
 }
 
-// Helper function to determine mountain color based on its level
+
 function getPriorityColor(level) {
   switch (level) {
     case 1: return colors.priority1;
@@ -22,11 +22,11 @@ function getPriorityColor(level) {
     case 3: return colors.priority3;
     case 4: return colors.priority4;
     case 5: return colors.priority5;
-    default: return '#E0E0E0'; // Fallback gray color
+    default: return '#E0E0E0'; 
   }
 }
 
-// Icon components
+
 const CalendarIcon = ({ color, size }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path d="M8 7V3M16 7V3M7 11H17M5 21H19C20.1046 21 21 20.1046 21 19V7C21 5.89543 20.1046 5 19 5H5C3.89543 5 3 5.89543 3 7V19C3 20.1046 3.89543 21 5 21Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -208,10 +208,10 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center', // Changed from 'flex-end' to 'center'
+        alignItems: 'center', 
         backgroundColor: colors.cardBackground,
         paddingHorizontal: 20,
-        paddingTop: 5, // Adjusted padding to bring it down slightly
+        paddingTop: 5, 
         paddingBottom: 10,
         borderBottomWidth: 1,
         borderBottomColor: colors.background,

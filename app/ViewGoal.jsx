@@ -1,18 +1,33 @@
-import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, ActivityIndicator } from 'react-native';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import React, { useState, useLayoutEffect, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, ActivityIndicator, FlatList } from 'react-native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Svg, { Path } from 'react-native-svg';
-import SegmentedControl from '@react-native-segmented-control/segmented-control';
-import { upsertGoal, getGoal } from '../lib/goalRepo'; // Added getGoal
+import { upsertGoal, getGoal } from '../lib/goalRepo';
+import { listTasksForGoal } from '../lib/taskRepo'; 
 import SnowyMountain from '../components/SnowyMountain';
 
-// Helper functions for dates
+
 const toISODate = (d) => d?.toISOString()?.split('T')[0];
 const parseISODate = (s) => (s ? new Date(s) : new Date());
 
-// Helper function to determine mountain color
+
+const colors = {
+    background: '#F2F2F2',
+    cardBackground: '#FFFFFF',
+    textPrimary: '#333333',
+    textSecondary: '#828282',
+    primaryBlue: '#2F80ED',
+    accent: '#27AE60',
+    priority1: '#6FCF97',
+    priority2: '#F2C94C',
+    priority3: '#F2994A',
+    priority4: '#EB5757',
+    priority5: '#C22B34',
+};
+
+
 function getPriorityColor(level) {
   switch (level) {
     case 1: return colors.priority1;
@@ -24,9 +39,9 @@ function getPriorityColor(level) {
   }
 }
 
-// Icons for the custom header
-const BackArrowIcon = ({ color, size }) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+
+const BackArrowIcon = ({ color, size, style }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
         <Path d="M15 18L9 12L15 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
 );
@@ -36,7 +51,7 @@ const EditIcon = ({ color, size }) => (
     </Svg>
 );
 
-// Reusable Field component for the edit form
+
 const Field = ({ label, value, onChangeText, placeholder, multiline = false }) => (
   <View style={styles.fieldContainer}>
     <Text style={styles.formLabel}>{label}</Text>
@@ -51,6 +66,46 @@ const Field = ({ label, value, onChangeText, placeholder, multiline = false }) =
   </View>
 );
 
+const TaskItem = ({ task, navigation }) => (
+  <TouchableOpacity onPress={() => navigation.push('ViewTask', { taskId: task.$id, initialTask: task })}>
+    <View style={styles.taskCard}>
+      <View style={[styles.taskPriorityIndicator, { backgroundColor: getPriorityColor(task.priority) }]} />
+      <View style={styles.taskContent}>
+        <Text style={styles.taskTitle}>{task.title}</Text>
+        {task.dueDate && (
+          <Text style={styles.taskDueDate}>Due: {task.dueDate.split('T')[0]}</Text>
+        )}
+      </View>
+      <BackArrowIcon color={colors.textSecondary} size={20} style={{ transform: [{ rotate: '180deg' }] }}/>
+    </View>
+  </TouchableOpacity>
+);
+
+const TaskList = ({ tasks, isLoading, navigation }) => {
+  if (isLoading) {
+    return <ActivityIndicator style={{ marginTop: 40 }} size="large" color={colors.primaryBlue} />;
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <View style={styles.tasksContainer}>
+        <Text style={styles.emptyText}>No Tasks Yet</Text>
+        <Text style={styles.emptySubtext}>Add a task to this goal to see it here.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      data={tasks}
+      keyExtractor={(item) => item.$id}
+      renderItem={({ item }) => <TaskItem task={item} navigation={navigation} />}
+      contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }}
+    />
+  );
+};
+
+
 export default function ViewGoalScreen() {
   const route = useRoute();
   const navigation = useNavigation();
@@ -62,7 +117,6 @@ export default function ViewGoalScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
-
   const [saving, setSaving] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -71,12 +125,16 @@ export default function ViewGoalScreen() {
     { label: "Daily", value: "DAILY" }, { label: "Weekly", value: "WEEKLY" }, { label: "Monthly", value: "MONTHLY" },
   ]);
 
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+
   const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const updatedGoal = await upsertGoal({ ...form, reviewCadence: reviewValue });
+      setGoal(updatedGoal);
       setForm(updatedGoal);
       setMode('view');
     } catch (err) {
@@ -92,7 +150,6 @@ export default function ViewGoalScreen() {
     setMode('view');
   };
 
-  // Fetch the goal data using the ID
   useEffect(() => {
     async function loadGoal() {
       if (!goalId) {
@@ -104,14 +161,33 @@ export default function ViewGoalScreen() {
         setGoal(fetchedGoal);
         setForm(fetchedGoal);
         setReviewValue(fetchedGoal.reviewCadence);
-        setLoading(false);
       } catch (e) {
         setError("Goal not found.");
+      } finally {
         setLoading(false);
       }
     }
     loadGoal();
   }, [goalId]);
+  
+  useFocusEffect(
+    useCallback(() => {
+      async function loadTasks() {
+        if (!goalId) return;
+        setTasksLoading(true);
+        try {
+          const fetchedTasks = await listTasksForGoal(goalId);
+          setTasks(fetchedTasks);
+        } catch (e) {
+          console.error("Failed to fetch tasks:", e);
+          Alert.alert("Error", "Could not load tasks for this goal.");
+        } finally {
+          setTasksLoading(false);
+        }
+      }
+      loadTasks();
+    }, [goalId])
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -125,14 +201,14 @@ export default function ViewGoalScreen() {
       headerRight: () => (
         mode === 'edit' ? (
             <View style={{ marginRight: 16 }}>
-              <TouchableOpacity onPress={handleSave} disabled={saving}>
-                <Text style={[styles.headerButtonText, { color: colors.primaryBlue, fontWeight: 'bold' }]}>{saving ? 'Saving...' : 'Save'}</Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={handleSave} disabled={saving}>
+                    <Text style={[styles.headerButtonText, { color: colors.primaryBlue, fontWeight: 'bold' }]}>{saving ? 'Saving...' : 'Save'}</Text>
+                </TouchableOpacity>
             </View>
         ) : null
       ),
     });
-  }, [navigation, mode, form, saving]);
+  }, [navigation, mode, form, saving, reviewValue]);
 
   if (loading) {
     return (
@@ -151,124 +227,104 @@ export default function ViewGoalScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen}>
-      <View style={styles.headerBubble}>
-        <View style={styles.cardHeader}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconContainer}>
-            <BackArrowIcon color={colors.textPrimary} size={24}/>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>{goal?.title}</Text>
-          <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerIconContainer}>
-            <EditIcon color={colors.primaryBlue} size={24}/>
-          </TouchableOpacity>
+    <View style={styles.screen}>
+        <View style={styles.headerBubble}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconContainer}>
+                <BackArrowIcon color={colors.textPrimary} size={24}/>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle} numberOfLines={1}>{goal?.title}</Text>
+            <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerIconContainer}>
+                <EditIcon color={colors.primaryBlue} size={24}/>
+            </TouchableOpacity>
         </View>
-      </View>
 
-      <View style={styles.segmentedControlContainer}>
-    <TouchableOpacity
-        style={[styles.customSegmentButton, selectedIndex === 0 && styles.customSegmentButtonActive]}
-        onPress={() => setSelectedIndex(0)}
-    >
-        <Text style={[styles.customSegmentText, selectedIndex === 0 && styles.customSegmentTextActive]}>Goal</Text>
-    </TouchableOpacity>
-    <TouchableOpacity
-        style={[styles.customSegmentButton, selectedIndex === 1 && styles.customSegmentButtonActive]}
-        onPress={() => setSelectedIndex(1)}
-    >
-        <Text style={[styles.customSegmentText, selectedIndex === 1 && styles.customSegmentTextActive]}>Tasks</Text>
-    </TouchableOpacity>
-</View>
+        <View style={styles.segmentedControlContainer}>
+            <TouchableOpacity
+                style={[styles.customSegmentButton, selectedIndex === 0 && styles.customSegmentButtonActive]}
+                onPress={() => setSelectedIndex(0)}
+            >
+                <Text style={[styles.customSegmentText, selectedIndex === 0 && styles.customSegmentTextActive]}>Goal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.customSegmentButton, selectedIndex === 1 && styles.customSegmentButtonActive]}
+                onPress={() => setSelectedIndex(1)}
+            >
+                <Text style={[styles.customSegmentText, selectedIndex === 1 && styles.customSegmentTextActive]}>Tasks</Text>
+            </TouchableOpacity>
+        </View>
 
-      <View style={styles.container}>
-        {selectedIndex === 0 ? (
-          <>
-            {mode === 'view' ? (
-              <View style={styles.card}>
-                <View style={styles.divider} />
-                {typeof goal?.priority === 'number' && (
-                  <View>
-                    <View style={styles.cardSection}>
-                      <Text style={styles.viewLabel}>Priority</Text>
-                      <View style={styles.mountainRow}>
-                        {[1, 2, 3, 4, 5].map((n) => (
-                            <SnowyMountain key={n} width={32} height={32} mountainColor={n <= goal.priority ? getPriorityColor(n) : '#E0E0E0'} snowColor={'#FFFFFF'} strokeWidth={0}/>
-                        ))}
+        <View style={[styles.container, { flex: 1 }]}>
+            {selectedIndex === 0 ? (
+                <ScrollView>
+                    {mode === 'view' ? (
+                      <View style={styles.card}>
+                        <View style={styles.divider} />
+                        {typeof goal?.priority === 'number' && (
+                          <View>
+                            <View style={styles.cardSection}>
+                              <Text style={styles.viewLabel}>Priority</Text>
+                              <View style={styles.mountainRow}>
+                                {[1, 2, 3, 4, 5].map((n) => (
+                                    <SnowyMountain key={n} width={32} height={32} mountainColor={n <= goal.priority ? getPriorityColor(n) : '#E0E0E0'} snowColor={'#FFFFFF'} strokeWidth={0}/>
+                                ))}
+                              </View>
+                            </View>
+                            <View style={styles.divider} />
+                          </View>
+                        )}
+                        <View style={styles.cardSection}><Text style={styles.viewLabel}>Why is this important?</Text><Text style={styles.value}>{goal?.description || 'Not specified'}</Text></View>
+                        <View style={styles.cardSection}><Text style={styles.viewLabel}>What will I gain?</Text><Text style={styles.value}>{goal?.why || 'Not specified'}</Text></View>
+                        <View style={styles.cardSection}><Text style={styles.viewLabel}>Success looks like...</Text><Text style={styles.value}>{goal?.successCriteria || 'Not specified'}</Text></View>
+                        <View style={styles.divider} />
+                        <View style={styles.cardSection}><Text style={styles.viewLabel}>Notes</Text><Text style={styles.value}>{goal?.notes || 'Not specified'}</Text></View>
+                        <View style={styles.cardSection}><Text style={styles.viewLabel}>Project</Text><Text style={styles.value}>{goal?.project || 'Not specified'}</Text></View>
+                        <View style={styles.divider} />
+                        <View style={styles.detailRow}>
+                          <View style={styles.detailItem}><Text style={styles.viewLabel}>Target Date</Text><Text style={styles.value}>{goal?.targetDate?.split('T')[0]}</Text></View>
+                          <View style={styles.detailItem}><Text style={styles.viewLabel}>Review Cadence</Text><Text style={styles.value}>{goal?.reviewCadence || 'Not specified'}</Text></View>
+                        </View>
                       </View>
-                    </View>
-                    <View style={styles.divider} />
-                  </View>
-                )}
-                <View style={styles.cardSection}><Text style={styles.viewLabel}>Why is this important?</Text><Text style={styles.value}>{goal?.description || 'Not specified'}</Text></View>
-                <View style={styles.cardSection}><Text style={styles.viewLabel}>What will I gain?</Text><Text style={styles.value}>{goal?.why || 'Not specified'}</Text></View>
-                <View style={styles.cardSection}><Text style={styles.viewLabel}>Success looks like...</Text><Text style={styles.value}>{goal?.successCriteria || 'Not specified'}</Text></View>
-                <View style={styles.divider} />
-                <View style={styles.cardSection}><Text style={styles.viewLabel}>Notes</Text><Text style={styles.value}>{goal?.notes || 'Not specified'}</Text></View>
-                <View style={styles.cardSection}><Text style={styles.viewLabel}>Project</Text><Text style={styles.value}>{goal?.project || 'Not specified'}</Text></View>
-                <View style={styles.divider} />
-                <View style={styles.detailRow}>
-                  <View style={styles.detailItem}><Text style={styles.viewLabel}>Target Date</Text><Text style={styles.value}>{goal?.targetDate?.split('T')[0]}</Text></View>
-                  <View style={styles.detailItem}><Text style={styles.viewLabel}>Review Cadence</Text><Text style={styles.value}>{goal?.reviewCadence || 'Not specified'}</Text></View>
-                </View>
-              </View>
+                    ) : (
+                      <View style={styles.detailsBubble}>
+                        <Field label="Title *" value={form?.title} onChangeText={(t) => setField('title', t)} placeholder="Short title"/>
+                        <Field label="Why is this important?" value={form?.description} onChangeText={(t) => setField('description', t)} placeholder="When I accomplish this, I will..." multiline/>
+                        <Field label="What will you gain?" value={form?.why} onChangeText={(t) => setField('why', t)} placeholder="I will gain..." multiline/>
+                        <Field label="Notes" value={form?.notes} onChangeText={(t) => setField('notes', t)} placeholder="Don't forget to..." multiline/>
+                        <Field label="I can mark this completed when *" value={form?.successCriteria} onChangeText={(t) => setField('successCriteria', t)} placeholder="e.g., I have done A, B, and C" multiline/>
+                        <View style={styles.fieldContainer}>
+                          <Text style={styles.formLabel}>Priority</Text>
+                          <View style={styles.mountainRow}>{[1, 2, 3, 4, 5].map((n) => (<TouchableOpacity key={n} onPress={() => setField('priority', n)}><SnowyMountain width={40} height={40} mountainColor={n <= form?.priority ? getPriorityColor(n) : '#E0E0E0'} snowColor={'#FFFFFF'} strokeWidth={0}/></TouchableOpacity>))}</View>
+                        </View>
+                        <View style={styles.fieldContainer}>
+                          <Text style={styles.formLabel}>Target Date *</Text>
+                          <TouchableOpacity style={styles.input} onPress={() => setDatePickerOpen(true)}><Text style={{fontSize: 16, color: colors.textPrimary}}>{form?.targetDate?.split('T')[0]}</Text></TouchableOpacity>
+                        </View>
+                        <DateTimePickerModal isVisible={datePickerOpen} mode="date" date={parseISODate(form?.targetDate)} onConfirm={(d) => { setDatePickerOpen(false); setField("targetDate", toISODate(d)); }} onCancel={() => setDatePickerOpen(false)}/>
+                        <View style={[styles.fieldContainer, { zIndex: 1000 }]}>
+                          <Text style={styles.formLabel}>Review Cadence *</Text>
+                          <DropDownPicker open={reviewOpen} value={reviewValue} items={reviewItems} setOpen={setReviewOpen} setValue={setReviewValue} setItems={setReviewItems} placeholder="Select cadence..." style={styles.dropdown} dropDownContainerStyle={styles.dropdownContainer} listMode="SCROLLVIEW"/>
+                        </View>
+                        <Field label="Project" value={form?.project} onChangeText={(t) => setField('project', t)} placeholder="Project name or relation label"/>
+                      </View>
+                    )}
+                </ScrollView>
             ) : (
-              <View style={styles.detailsBubble}>
-                <Field label="Title *" value={form?.title} onChangeText={(t) => setField('title', t)} placeholder="Short title"/>
-                <Field label="Why is this important?" value={form?.description} onChangeText={(t) => setField('description', t)} placeholder="When I accomplish this, I will..." multiline/>
-                <Field label="What will you gain?" value={form?.why} onChangeText={(t) => setField('why', t)} placeholder="I will gain..." multiline/>
-                <Field label="Notes" value={form?.notes} onChangeText={(t) => setField('notes', t)} placeholder="Don't forget to..." multiline/>
-                <Field label="I can mark this completed when *" value={form?.successCriteria} onChangeText={(t) => setField('successCriteria', t)} placeholder="e.g., I have done A, B, and C" multiline/>
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.formLabel}>Priority</Text>
-                  <View style={styles.mountainRow}>{[1, 2, 3, 4, 5].map((n) => (<TouchableOpacity key={n} onPress={() => setField('priority', n)}><SnowyMountain width={40} height={40} mountainColor={n <= form?.priority ? getPriorityColor(n) : '#E0E0E0'} snowColor={'#FFFFFF'} strokeWidth={0}/></TouchableOpacity>))}</View>
-                </View>
-                <View style={styles.fieldContainer}>
-                  <Text style={styles.formLabel}>Target Date *</Text>
-                  <TouchableOpacity style={styles.input} onPress={() => setDatePickerOpen(true)}><Text style={{fontSize: 16, color: colors.textPrimary}}>{form?.targetDate?.split('T')[0]}</Text></TouchableOpacity>
-                </View>
-                <DateTimePickerModal isVisible={datePickerOpen} mode="date" date={parseISODate(form?.targetDate)} onConfirm={(d) => { setDatePickerOpen(false); setField("targetDate", toISODate(d)); }} onCancel={() => setDatePickerOpen(false)}/>
-                <View style={[styles.fieldContainer, { zIndex: 1000 }]}>
-                  <Text style={styles.formLabel}>Review Cadence *</Text>
-                  <DropDownPicker open={reviewOpen} value={reviewValue} items={reviewItems} setOpen={setReviewOpen} setValue={setReviewValue} setItems={setReviewItems} placeholder="Select cadence..." style={styles.dropdown} dropDownContainerStyle={styles.dropdownContainer} listMode="SCROLLVIEW"/>
-                </View>
-                <Field label="Project" value={form?.project} onChangeText={(t) => setField('project', t)} placeholder="Project name or relation label"/>
-              </View>
+                <TaskList tasks={tasks} isLoading={tasksLoading} navigation={navigation} />
             )}
-          </>
-        ) : (
-          <View style={styles.tasksContainer}>
-            <Text style={styles.emptyText}>Tasks will be displayed here.</Text>
-            <Text style={styles.emptySubtext}>You can add a new component for tasks here.</Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+        </View>
+    </View>
   );
 }
 
-const colors = {
-    background: '#F2F2F2',
-    cardBackground: '#FFFFFF',
-    textPrimary: '#333333',
-    textSecondary: '#828282',
-    primaryBlue: '#2F80ED',
-    accent: '#27AE60',
-    priority1: '#6FCF97',
-    priority2: '#F2C94C',
-    priority3: '#F2994A',
-    priority4: '#EB5757',
-    priority5: '#C22B34',
-};
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
- container: { 
+  container: { 
     paddingTop: 10, 
     paddingBottom: 40, 
     paddingHorizontal: 20 
-},
+  },
   card: { backgroundColor: colors.cardBackground, borderRadius: 24, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 15, elevation: 5, },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, },
-  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'Pacifico-Regular', fontSize: 30, color: colors.textPrimary, marginHorizontal: 12, },
+  headerTitle: { flex: 1, textAlign: 'center', fontFamily: 'Pacifico-Regular', fontSize: 24, color: colors.textPrimary, marginHorizontal: 12, },
   headerIconContainer: { padding: 4, },
   headerButtonText: { color: colors.textSecondary, fontFamily: 'OpenSans-SemiBold', fontSize: 16 },
   cardSection: { paddingVertical: 10 },
@@ -284,7 +340,7 @@ const styles = StyleSheet.create({
   inputMultiline: { minHeight: 96, textAlignVertical: "top" },
   dropdown: { borderColor: "#e5e7eb", borderRadius: 12, backgroundColor: "#fff" },
   dropdownContainer: { borderColor: "#e5e7eb", borderRadius: 12 },
-headerBubble: {
+  headerBubble: {
     marginHorizontal: 16,
     marginTop: 48,
     borderRadius: 20,
@@ -298,8 +354,8 @@ headerBubble: {
     shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 4,
-},
-segmentedControlContainer: {
+  },
+  segmentedControlContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -314,42 +370,32 @@ segmentedControlContainer: {
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
-},
-customSegmentButton: {
+  },
+  customSegmentButton: {
     flex: 1,
     paddingVertical: 8,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-},
-customSegmentButtonActive: {
+  },
+  customSegmentButtonActive: {
     backgroundColor: colors.primaryBlue,
-},
-customSegmentText: {
+  },
+  customSegmentText: {
     color: colors.textSecondary,
     fontWeight: '600',
     fontSize: 16,
-},
-customSegmentTextActive: {
+  },
+  customSegmentTextActive: {
     color: '#FFFFFF',
-},
-cardHeader: {
+  },
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     flex: 1,
-},
-headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontFamily: 'Pacifico-Regular',
-    fontSize: 24, 
-    color: colors.textPrimary,
-    marginHorizontal: 12,
-},
-
-detailsBubble: {
-    marginHorizontal: 16,
+  },
+  detailsBubble: {
     marginTop: 8,
     marginBottom: 24,
     borderRadius: 20,
@@ -360,10 +406,44 @@ detailsBubble: {
     shadowOpacity: 0.05,
     shadowRadius: 12,
     elevation: 3,
-},
+  },
   tasksContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   emptyText: { fontFamily: 'Oswald-Bold', fontSize: 24, color: colors.textPrimary, textAlign: "center" },
   emptySubtext: { fontFamily: 'OpenSans-Regular', fontSize: 16, color: colors.textSecondary, marginTop: 8, textAlign: "center" },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  errorText: { fontSize: 16, color: "#b91c1c", textAlign: 'center', padding: 20 }
+  errorText: { fontSize: 16, color: "#b91c1c", textAlign: 'center', padding: 20 },
+  taskCard: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  taskPriorityIndicator: {
+    width: 6,
+    height: '80%',
+    borderRadius: 3,
+    backgroundColor: colors.primaryBlue,
+    marginRight: 12,
+  },
+  taskContent: {
+    flex: 1,
+  },
+  taskTitle: {
+    fontFamily: 'OpenSans-SemiBold',
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  taskDueDate: {
+    fontFamily: 'OpenSans-Regular',
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
 });

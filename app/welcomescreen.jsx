@@ -1,14 +1,34 @@
-import { View, Text, StyleSheet, ImageBackground, Pressable, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ImageBackground, Pressable, Animated, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useRef } from 'react';
+import { useFonts, OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   
+  const [fontsLoaded] = useFonts({
+    OpenSans_700Bold,
+  });
+
   const signUpScale = useRef(new Animated.Value(1)).current;
   const loginScale = useRef(new Animated.Value(1)).current;
-  const signUpRipple = useRef(new Animated.Value(0)).current;
-  const loginRipple = useRef(new Animated.Value(0)).current;
+
+  const animatePressIn = (scaleValue) => {
+    Animated.timing(scaleValue, {
+      toValue: 0.95,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const animatePressOut = (scaleValue) => {
+    Animated.timing(scaleValue, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
 
   const handleSignUp = () => {
     router.push('/signup'); 
@@ -17,34 +37,10 @@ export default function WelcomeScreen() {
   const handleLogin = () => {
     router.push('/login'); 
   };
-
-  const animatePress = (scaleValue, rippleValue) => {
-    Animated.parallel([
-      Animated.timing(scaleValue, {
-        toValue: 0.95,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(rippleValue, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: false,
-      }),
-    ]).start(() => {
-      Animated.parallel([
-        Animated.timing(scaleValue, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(rippleValue, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: false,
-        }),
-      ]).start();
-    });
-  };
+  
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <ImageBackground 
@@ -56,60 +52,32 @@ export default function WelcomeScreen() {
         <View style={styles.topSpacer} />
         
         <View style={styles.buttonContainer}>
-          <Animated.View style={{ transform: [{ scale: signUpScale }] }}>
-            <Pressable 
-              style={styles.button} 
-              onPress={handleSignUp}
-              onPressIn={() => animatePress(signUpScale, signUpRipple)}
-            >
-              <Text style={styles.buttonText}>Sign Up</Text>
-              <Animated.View 
-                style={[
-                  styles.ripple,
-                  {
-                    opacity: signUpRipple.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 0.3],
-                    }),
-                    transform: [{
-                      scale: signUpRipple.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 1.5],
-                      }),
-                    }],
-                  },
-                ]}
-              />
-            </Pressable>
-          </Animated.View>
-          
           <Animated.View style={{ transform: [{ scale: loginScale }] }}>
-            <Pressable 
-              style={styles.button} 
+            <TouchableOpacity 
+              style={[styles.button, styles.secondaryButton]} 
               onPress={handleLogin}
-              onPressIn={() => animatePress(loginScale, loginRipple)}
+              onPressIn={() => animatePressIn(loginScale)}
+              onPressOut={() => animatePressOut(loginScale)}
+              activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>Login</Text>
-              <Animated.View 
-                style={[
-                  styles.ripple,
-                  {
-                    opacity: loginRipple.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 0.3],
-                    }),
-                    transform: [{
-                      scale: loginRipple.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 1.5],
-                      }),
-                    }],
-                  },
-                ]}
-              />
-            </Pressable>
+              <Text style={[styles.buttonText, styles.secondaryButtonText]}>Login</Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          <Animated.View style={{ transform: [{ scale: signUpScale }] }}>
+            <TouchableOpacity 
+              style={[styles.button, styles.primaryButton]}
+              onPress={handleSignUp}
+              onPressIn={() => animatePressIn(signUpScale)}
+              onPressOut={() => animatePressOut(signUpScale)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.buttonText, styles.primaryButtonText]}>Sign Up</Text>
+            </TouchableOpacity>
           </Animated.View>
         </View>
+
+        <View style={styles.bottomSpacer} />
       </View>
     </ImageBackground>
   );
@@ -121,49 +89,55 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(49, 119, 201, 0.1)',
-    justifyContent: 'flex-end',
-    paddingTop: 60,
-    paddingBottom: 300,
+    backgroundColor: 'transparent', 
+    justifyContent: 'center', 
+    alignItems: 'center',
   },
   topSpacer: {
+    flex: 1.5,
+  },
+  bottomSpacer: {
     flex: 1,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 80,
-    gap: 8,
-    paddingBottom: 60,
+    width: '85%',
+    gap: 15,
   },
   button: {
-    backgroundColor: '#37CAA9',
-    paddingVertical: 8,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+    paddingVertical: 14,
+    borderRadius: 50,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-    overflow: 'hidden',
-    position: 'relative',
+    justifyContent: 'center',
+    
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 0,
+        shadowColor: "rgba(0,0,0,0.2)", 
+      },
+    }),
+  },
+  primaryButton: {
+    backgroundColor: '#64F0D2',
+    borderColor: '#64F0D2',
+  },
+  secondaryButton: {
+    backgroundColor: '#FCFCFD',
+    borderColor: '#FCFCFD',
   },
   buttonText: {
-    color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '600',
-    zIndex: 1, 
+    fontFamily: 'OpenSans_700Bold',
   },
-  ripple: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    marginTop: -10,
-    marginLeft: -10,
+  primaryButtonText: {
+    color: '#333333',
+  },
+  secondaryButtonText: {
+    color: '#04A777',
   },
 });

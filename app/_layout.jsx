@@ -6,6 +6,7 @@ import GlobalProvider, { useGlobalContext } from '../context/GlobalProvider';
 import { useEffect } from 'react';
 import { RightDrawerProvider } from '../components/RightDrawerContext';
 import { MenuProvider } from 'react-native-popup-menu';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -62,7 +63,9 @@ export default function RootLayout() {
     <GlobalProvider>
       <RightDrawerProvider>
         <MenuProvider>
-          <RootLayoutNav />
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
         </MenuProvider>
       </RightDrawerProvider>
     </GlobalProvider>

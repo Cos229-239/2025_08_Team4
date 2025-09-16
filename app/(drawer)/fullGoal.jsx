@@ -1,7 +1,7 @@
 // app/drawer/fullGoal.jsx
 import React from "react";
 import GoalDetailsScreen from "../../components/GoalDetailsScreen";
-import { getGoal, upsertGoal } from "../../lib/goalRepo"; // make sure you added this file
+import { getGoal, upsertGoal } from "../../lib/goalRepo"; 
 
 export default function FullGoal({ route }) {
   const goalId = route?.params?.goalId;
@@ -22,7 +22,7 @@ export default function FullGoal({ route }) {
     return () => { on = false; };
   }, [goalId]);
 
-  if (loading) return null; // or a spinner
+  if (loading) return null;
 
   return (
     <GoalDetailsScreen
