@@ -16,7 +16,7 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { fetchMyProfile } from "../lib/profile";
 import SnowyMountain from "../components/SnowyMountain";
 
-/* ---------- helpers (ok outside component) ---------- */
+/* ---------- helpers outside component ---------- */
 
 
 function clampInt(n, min, max) {
