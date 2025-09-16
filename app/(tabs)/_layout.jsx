@@ -1,5 +1,5 @@
 import { Tabs, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Text, Pressable } from "react-native";
 import PlusButton from "../../components/Buttons/PlusButton";
 import { useRightDrawer } from "../../components/RightDrawerContext";
@@ -39,6 +39,18 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} /> 
           }} 
         />
+
+        <Tabs.Screen 
+          name="goals" 
+          options={{ 
+            headerShown: false,
+            title: "Goals", 
+            tabBarLabel: "Goals", 
+            headerTitle: () => HEADER_TITLE("Goals"), 
+            tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="summit" size={size} color={color} />
+          }} 
+        />
+
         <Tabs.Screen name="addgoal" options={{ title: "Goal Worksheet", headerTitle: () => HEADER_TITLE("Goal Worksheet"), tabBarButton: (props) => <PlusButton {...props} size={50} onPress={() => setIsModalVisible(true)} /> }} listeners={{ tabPress: (e) => { e.preventDefault(); } }} />
         <Tabs.Screen name="menu" options={{ headerShown: false, tabBarIcon: ({ color, size }) => <Ionicons name="menu" color={color} size={size} />, tabBarButton: (props) => <Pressable {...props} onPress={openDrawer} /> }} listeners={{ tabPress: (e) => { e.preventDefault(); openDrawer(); } }} />
         <Tabs.Screen name="dailystandup" options={{ href: null }} />

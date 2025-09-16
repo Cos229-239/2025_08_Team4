@@ -1,4 +1,3 @@
-// components/GoalDetailsScreen.jsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -16,7 +15,6 @@ import DropDownPicker from "react-native-dropdown-picker";
 import { fetchMyProfile } from "../lib/profile";
 import SnowyMountain from "../components/SnowyMountain";
 
-/* ---------- helpers outside component ---------- */
 
 
 function clampInt(n, min, max) {
@@ -37,7 +35,7 @@ function parseISODate(s) {
   return dt;
 }
 
-/* ---------- small UI atoms ---------- */
+
 function Field({
   label,
   value,
@@ -82,17 +80,17 @@ const Step = ({ disabled, onPress, text }) => (
   </TouchableOpacity>
 );
 
-/* ---------- main ---------- */
+
 export default function GoalDetailsScreen({
   initialGoal = {},
   onSave = async () => {},
 }) {
-  const [mode, setMode] = useState("view"); // "view" | "edit"
+  const [mode, setMode] = useState("view");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  // --- dropdown state (INSIDE the component) ---
+
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewItems, setReviewItems] = useState([
     { label: "Daily", value: "DAILY" },
@@ -111,7 +109,8 @@ export default function GoalDetailsScreen({
     priority: 0,
     targetDate: "",
     timeBudgetMin: "",
-    status: "not_started",
+    
+    status: "paused",
     reviewCadence: "",
     project: "",
     ownerId: "",
@@ -120,7 +119,7 @@ export default function GoalDetailsScreen({
     $updatedAt: "",
   });
 
-  // hydrate from initialGoal
+
   useEffect(() => {
     const g = initialGoal || {};
     const next = {
@@ -136,7 +135,7 @@ export default function GoalDetailsScreen({
         g.timeBudgetMin === 0 || g.timeBudgetMin
           ? String(g.timeBudgetMin)
           : "",
-      status: g.status ?? "not_started",
+      status: g.status ?? "paused",
       reviewCadence: g.reviewCadence ?? "",
       project: g.project ?? "",
       ownerId: g.ownerId ?? "",
@@ -145,12 +144,12 @@ export default function GoalDetailsScreen({
       $updatedAt: g.$updatedAt ?? "",
     };
     setForm(next);
-    setReviewValue(next.reviewCadence || null); // keep dropdown in sync
+    setReviewValue(next.reviewCadence || null); 
     setMode(g.$id ? "view" : "edit");
     setErrors({});
   }, [initialGoal?.$id]);
 
-  // derive ownerId from profile if missing on the doc
+ 
   useEffect(() => {
     let on = true;
     (async () => {
@@ -164,15 +163,15 @@ export default function GoalDetailsScreen({
     return () => { on = false; };
   }, [initialGoal?.$id]);
 
-  // keep form.reviewCadence in sync with dropdown value
+  
   useEffect(() => {
     if (reviewValue !== form.reviewCadence) {
       setForm((f) => ({ ...f, reviewCadence: reviewValue || "" }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [reviewValue]);
 
-  const statusOptions = ["not_started", "active", "blocked", "done"];
+  const statusOptions = ["active", "paused", "completed", "dropped"]; 
   const isView = mode === "view";
   const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -200,8 +199,9 @@ export default function GoalDetailsScreen({
     }
     const payload = {
       ...form,
-      ownerId: form.ownerId, // ensure profile value
+      ownerId: form.ownerId, 
       timeBudgetMin: form.timeBudgetMin === "" ? null : parseInt(form.timeBudgetMin, 10),
+      status: form.status || 'paused',
     };
     try {
       setSaving(true);
@@ -292,13 +292,13 @@ export default function GoalDetailsScreen({
           errorText={errors.successCriteria}
         />
 
-        {/* Priority a..5 */}
+        
         <View style={styles.block}>
         <View style={styles.priorityRow}>
-            {/* Label on the left */}
+            
             <Text style={styles.priorityLabel}>Priority</Text>
 
-            {/* Mountains on the right */}
+            
             <View style={styles.mountainRow}>
             {[1, 2, 3, 4, 5].map((n) => {
                 const selected = n <= form.priority;
@@ -323,11 +323,11 @@ export default function GoalDetailsScreen({
             </View>
         </View>
 
-        {/* Error text below */}
+       
         {errors.priority ? <ErrorText text={errors.priority} /> : null}
         </View>
 
-        {/* Target Date with pop-out calendar */}
+       
         <View style={styles.block}>
           <Label text="Target Date *" />
           <TouchableOpacity
@@ -371,7 +371,7 @@ export default function GoalDetailsScreen({
           />
         </View>
 
-        {/* Review Cadence (single-select dropdown) */}
+        
         <View style={[styles.block, { zIndex: 3000 }]}>
           <Label text="Review Cadence *" />
           <DropDownPicker
@@ -383,6 +383,8 @@ export default function GoalDetailsScreen({
             setItems={setReviewItems}
             disabled={isView}
             placeholder="Select cadence..."
+            
+            listMode="SCROLLVIEW"
             style={[
               styles.dropdown,
               isView && styles.inputDisabled,
@@ -409,7 +411,7 @@ export default function GoalDetailsScreen({
   );
 }
 
-/* ---------- styles ---------- */
+
 const styles = StyleSheet.create({
   header: {
     paddingTop: 14,
@@ -502,4 +504,10 @@ const styles = StyleSheet.create({
   paddingVertical: 6,
 },
 mountainTap: { padding: 4 },
+
+priorityLabel: {
+    fontSize: 13,
+    color: "#374151",
+    fontWeight: "600",
+  },
 });
