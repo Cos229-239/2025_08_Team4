@@ -14,7 +14,6 @@
     "@expo-google-fonts/oswald": "^0.4.1",
     "@expo-google-fonts/pacifico": "^0.4.0",
     "@react-native-community/datetimepicker": "8.4.1",
-    "@react-native-picker/picker": "^2.11.1",
     "@react-navigation/drawer": "^7.3.9",
     "appwrite": "^19.0.0",
     "expo": "53.0.22",
