@@ -23,6 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { account } from '../../lib/appwrite';
+import { updateProfile } from '../../lib/profile';
 
 const HEADER_TITLE = () => (
   <Text
@@ -39,7 +40,7 @@ const HEADER_TITLE = () => (
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { user, setUser } = useGlobalContext();
+  const { user, refresh } = useGlobalContext();
   const [fontsLoaded, fontError] = useFonts({
     Pacifico_400Regular,
     Oswald_600SemiBold,
@@ -173,14 +174,17 @@ const [showPassword, setShowPassword] = useState(false);
       // Update user preferences
       await account.updatePrefs(prefs);
   
-      // Update local user state
-      const updatedUser = {
-        ...user,
+      // Update profile database with the new information
+      await updateProfile({
         name: name.trim(),
         email: email.trim(),
-        prefs: prefs,
-      };
-      setUser(updatedUser);
+        language: languageValue,
+        pronouns: pronounsValue,
+        country: countryValue,
+      });
+  
+      // Refresh user data from Appwrite to get the latest information
+      await refresh();
   
       Alert.alert('Success', 'Profile updated successfully!', [
         { text: 'OK', onPress: () => router.back() }

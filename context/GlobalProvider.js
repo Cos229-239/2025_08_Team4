@@ -87,6 +87,7 @@ export default function GlobalProvider({ children }) {
     isLoading,
     isLoggedIn,
     user,
+    setUser,
     profile,
     profileLoading,
     signIn,
@@ -94,7 +95,7 @@ export default function GlobalProvider({ children }) {
     signOut,
     refresh,
     logSession,
-  }), [isLoading, isLoggedIn, user, profile, profileLoading, signIn, signInAnon, signOut, refresh, logSession]);
+  }), [isLoading, isLoggedIn, user, setUser, profile, profileLoading, signIn, signInAnon, signOut, refresh, logSession]);
 
   return <GlobalContext.Provider value={value}>{children}</GlobalContext.Provider>;
 }
