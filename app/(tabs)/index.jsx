@@ -23,14 +23,15 @@ const TaskItem = ({ item }) => {
   );
 };
 
-const ManagementButton = ({ title, iconName }) => (
-  <Pressable style={styles.gridItem}>
+const ManagementButton = ({ title, iconName, onPress }) => (
+  <Pressable style={styles.gridItem} onPress={onPress} accessibilityRole='button'>
     <Ionicons name={iconName} size={32} color="#3177C9" />
     <Text style={styles.gridText}>{title}</Text>
   </Pressable>
 );
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
     Oswald_600SemiBold,
     OpenSans_700Bold,
@@ -65,7 +66,11 @@ export default function HomeScreen() {
             <ManagementButton title="Goal Glimpse" iconName="eye-outline" />
             <ManagementButton title="New Goal" iconName="add-circle-outline" />
             <ManagementButton title="New Task" iconName="clipboard-outline" />
-            <ManagementButton title="Task Attack" iconName="flash-outline" />
+            <ManagementButton
+  title="Task Attack"
+  iconName="flash-outline"
+  onPress={() => { console.log("pressed"); router.push("/(tabs)/taskAttack"); }}
+/>
           </View>
         </View>
       </ScrollView>
