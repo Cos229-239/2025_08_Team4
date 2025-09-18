@@ -1,10 +1,10 @@
 import React, { useState, useLayoutEffect, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Platform, Alert, ActivityIndicator, FlatList } from 'react-native';
-import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import DropDownPicker from 'react-native-dropdown-picker';
 import Svg, { Path } from 'react-native-svg';
-import { upsertGoal, getGoal } from '../lib/goalRepo';
+import { upsertGoal, getGoal, listMyGoals } from '../lib/goalRepo';
 import { listTasksForGoal } from '../lib/taskRepo'; 
 import { listMyProjects, createProject } from '../lib/projectRepo';
 import SnowyMountain from '../components/SnowyMountain';
@@ -31,27 +31,30 @@ function getPriorityColor(level) {
 const BackArrowIcon = ({ color, size, style }) => ( <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}><Path d="M15 18L9 12L15 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></Svg>);
 const EditIcon = ({ color, size }) => ( <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"><Path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13M18.5 2.5C18.8978 2.10218 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10218 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10218 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></Svg>);
 const Field = ({ label, value, onChangeText, placeholder, multiline = false }) => ( <View style={styles.fieldContainer}><Text style={styles.formLabel}>{label}</Text><TextInput style={[styles.input, multiline && styles.inputMultiline]} value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor="#BDBDBD" multiline={multiline} /></View>);
-const TaskItem = ({ task, navigation }) => ( <TouchableOpacity onPress={() => navigation.push('ViewTask', { taskId: task.$id, initialTask: task })}><View style={styles.taskCard}><View style={[styles.taskPriorityIndicator, { backgroundColor: getPriorityColor(task.priority) }]} /><View style={styles.taskContent}><Text style={styles.taskTitle}>{task.title}</Text>{task.dueDate && (<Text style={styles.taskDueDate}>Due: {task.dueDate.split('T')[0]}</Text>)}</View><BackArrowIcon color={colors.textSecondary} size={20} style={{ transform: [{ rotate: '180deg' }] }}/></View></TouchableOpacity>);
-const TaskList = ({ tasks, isLoading, navigation }) => {
+const TaskItem = ({ task }) => {
+    const router = useRouter();
+    return (<TouchableOpacity onPress={() => router.push({ pathname: '/ViewTask', params: { taskId: task.$id } })}><View style={styles.taskCard}><View style={[styles.taskPriorityIndicator, { backgroundColor: getPriorityColor(task.priority) }]} /><View style={styles.taskContent}><Text style={styles.taskTitle}>{task.title}</Text>{task.dueDate && (<Text style={styles.taskDueDate}>Due: {task.dueDate.split('T')[0]}</Text>)}</View><BackArrowIcon color={colors.textSecondary} size={20} style={{ transform: [{ rotate: '180deg' }] }}/></View></TouchableOpacity>);
+}
+const TaskList = ({ tasks, isLoading }) => {
   if (isLoading) { return <ActivityIndicator style={{ marginTop: 40 }} size="large" color={colors.primaryBlue} />; }
   if (tasks.length === 0) { return ( <View style={styles.tasksContainer}><Text style={styles.emptyText}>No Tasks Yet</Text><Text style={styles.emptySubtext}>Add a task to this goal to see it here.</Text></View> ); }
-  return ( <FlatList data={tasks} keyExtractor={(item) => item.$id} renderItem={({ item }) => <TaskItem task={item} navigation={navigation} />} contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }} /> );
+  return ( <FlatList data={tasks} keyExtractor={(item) => item.$id} renderItem={({ item }) => <TaskItem task={item} />} contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }} /> );
 };
 
 export default function ViewGoalScreen() {
-  const route = useRoute();
-  const navigation = useNavigation();
-  const { goalId, initialGoal } = route.params;
+  const router = useRouter();
+  const { goalId } = useLocalSearchParams();
 
   const [mode, setMode] = useState('view');
-  const [goal, setGoal] = useState(initialGoal);
-  const [form, setForm] = useState(initialGoal);
+  const [goal, setGoal] = useState(null);
+  const [form, setForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewValue, setReviewValue] = useState(null);
   const [reviewItems, setReviewItems] = useState([ { label: "Daily", value: "DAILY" }, { label: "Weekly", value: "WEEKLY" }, { label: "Monthly", value: "MONTHLY" }, ]);
   const [projectOpen, setProjectOpen] = useState(false);
   const [projectItems, setProjectItems] = useState([]);
@@ -60,59 +63,51 @@ export default function ViewGoalScreen() {
 
   const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      let goalToSave = { ...form };
-      const selectedProjectName = goalToSave.project?.trim();
-
-      if (selectedProjectName) {
-        const allProjects = await listMyProjects();
-        let existingProject = allProjects.find(p => p.name === selectedProjectName);
-        if (!existingProject) {
-          existingProject = await createProject({ name: selectedProjectName });
-        }
-        goalToSave.projectId = existingProject.$id;
-      } else {
-        goalToSave.projectId = null;
-      }
-      const updatedGoal = await upsertGoal(goalToSave);
+      const updatedGoal = await upsertGoal({ ...form, reviewCadence: reviewValue });
       setGoal(updatedGoal);
       setForm(updatedGoal);
       setMode('view');
     } catch (err) {
-      console.error("Save Error:", err);
       Alert.alert("Save failed", err.message || "Could not save the goal.");
     } finally {
       setSaving(false);
     }
-  }, [form]);
+  };
 
-  const handleCancel = useCallback(() => {
+  const handleCancel = () => {
     setForm(goal);
+    setReviewValue(goal?.reviewCadence);
     setMode('view');
-  }, [goal]);
+  };
 
-  useEffect(() => {
-    async function loadData() {
-      if (!goalId) { setLoading(false); return; }
-      try {
-        setLoading(true);
-        const [fetchedGoal, allProjects] = await Promise.all([ getGoal(goalId), listMyProjects() ]);
-        setGoal(fetchedGoal);
-        setForm(fetchedGoal);
-        
-        const pickerItems = allProjects.map(p => ({ label: p.name, value: p.$id }));
-        pickerItems.push({ label: "+ Create New Project", value: "++CREATE_NEW++" });
-        setProjectItems(pickerItems);
-      } catch (e) {
-        setError("Goal not found.");
-      } finally {
-        setLoading(false);
+  useFocusEffect(
+    useCallback(() => {
+      async function loadData() {
+        if (!goalId) { setLoading(false); return; }
+        try {
+          setLoading(true);
+          const [fetchedGoal, allProjects] = await Promise.all([ getGoal(goalId), listMyProjects() ]);
+          setGoal(fetchedGoal);
+          setForm(fetchedGoal);
+          setReviewValue(fetchedGoal.reviewCadence);
+          const pickerItems = allProjects.map(p => ({ label: p.name, value: p.$id }));
+          pickerItems.push({ label: "+ Create New Project", value: "++CREATE_NEW++" });
+          setProjectItems(pickerItems);
+
+          const fetchedTasks = await listTasksForGoal(goalId);
+          setTasks(fetchedTasks);
+        } catch (e) {
+          setError("Goal not found.");
+        } finally {
+          setLoading(false);
+        }
       }
-    }
-    loadData();
-  }, [goalId]);
+      loadData();
+    }, [goalId])
+  );
   
   const handleProjectSelect = (value) => {
     if (value === '++CREATE_NEW++') {
@@ -121,7 +116,6 @@ export default function ViewGoalScreen() {
           try {
             const trimmedName = newProjectName.trim();
             const newProject = await createProject({ name: trimmedName });
-            
             setProjectItems(prev => {
                 const newItems = [...prev.filter(p => p.value !== '++CREATE_NEW++'), { label: newProject.name, value: newProject.$id }];
                 newItems.push({ label: "+ Create New Project", value: "++CREATE_NEW++" });
@@ -145,37 +139,20 @@ export default function ViewGoalScreen() {
     }
   };
   
-  useFocusEffect(
-    useCallback(() => {
-      async function loadTasks() {
-        if (!goalId) return;
-        setTasksLoading(true);
-        try { const fetchedTasks = await listTasksForGoal(goalId); setTasks(fetchedTasks); } 
-        catch (e) { console.error("Failed to fetch tasks:", e); Alert.alert("Error", "Could not load tasks for this goal."); } 
-        finally { setTasksLoading(false); }
-      }
-      loadTasks();
-    }, [goalId])
-  );
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShown: mode === 'edit',
-      title: 'Edit Goal',
-      headerLeft: mode === 'edit' ? () => ( <TouchableOpacity onPress={handleCancel} style={{ marginLeft: 16 }}><Text style={styles.headerButtonText}>Cancel</Text></TouchableOpacity> ) : () => null,
-      headerRight: () => ( mode === 'edit' ? ( <View style={{ marginRight: 16 }}><TouchableOpacity onPress={handleSave} disabled={saving}><Text style={[styles.headerButtonText, { color: colors.primaryBlue, fontWeight: 'bold' }]}>{saving ? 'Saving...' : 'Save'}</Text></TouchableOpacity></View> ) : null ),
-    });
-  }, [navigation, mode, saving, handleSave, handleCancel]);
-  
   if (loading || !form) return ( <View style={styles.centered}><ActivityIndicator size="large" color={colors.primaryBlue} /></View> );
   if (error) return ( <View style={styles.centered}><Text style={styles.errorText}>{error}</Text></View> );
   
-  const projectName = goal?.projectId ? (projectItems.find(p => p.value === goal.projectId)?.label || goal.project) : (goal?.project || 'Not specified');
+  const projectName = goal?.project || 'Not specified';
 
   return (
     <View style={styles.screen}>
+      <Stack.Screen options={{
+          headerShown: mode === 'edit', title: 'Edit Goal',
+          headerLeft: () => (<TouchableOpacity onPress={handleCancel} style={{ marginLeft: 16 }}><Text style={styles.headerButtonText}>Cancel</Text></TouchableOpacity>),
+          headerRight: () => (<View style={{ marginRight: 16 }}><TouchableOpacity onPress={handleSave} disabled={saving}><Text style={[styles.headerButtonText, { color: colors.primaryBlue, fontWeight: 'bold' }]}>{saving ? 'Saving...' : 'Save'}</Text></TouchableOpacity></View>)
+      }}/>
       <View style={styles.headerBubble}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconContainer}><BackArrowIcon color={colors.textPrimary} size={24}/></TouchableOpacity>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerIconContainer}><BackArrowIcon color={colors.textPrimary} size={24}/></TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>{goal?.title}</Text>
           <TouchableOpacity onPress={() => setMode('edit')} style={styles.headerIconContainer}><EditIcon color={colors.primaryBlue} size={24}/></TouchableOpacity>
       </View>
@@ -212,47 +189,33 @@ export default function ViewGoalScreen() {
                   <View style={styles.fieldContainer}><Text style={styles.formLabel}>Priority</Text><View style={styles.mountainRow}>{[1, 2, 3, 4, 5].map((n) => (<TouchableOpacity key={n} onPress={() => setField('priority', n)}><SnowyMountain width={40} height={40} mountainColor={n <= form?.priority ? getPriorityColor(n) : '#E0E0E0'} snowColor={'#FFFFFF'} strokeWidth={0}/></TouchableOpacity>))}</View></View>
                   <View style={styles.fieldContainer}><Text style={styles.formLabel}>Target Date *</Text><TouchableOpacity style={styles.input} onPress={() => setDatePickerOpen(true)}><Text style={{fontSize: 16, color: colors.textPrimary}}>{form?.targetDate?.split('T')[0]}</Text></TouchableOpacity></View>
                   <DateTimePickerModal isVisible={datePickerOpen} mode="date" date={parseISODate(form?.targetDate)} onConfirm={(d) => { setDatePickerOpen(false); setField("targetDate", toISODate(d)); }} onCancel={() => setDatePickerOpen(false)}/>
-                  <View style={[styles.fieldContainer, { zIndex: projectOpen ? 3000 : 2000 }]}>
+                  <View style={[styles.fieldContainer, { zIndex: projectOpen ? 3000 : 1000 }]}>
                       <Text style={styles.formLabel}>Project</Text>
                       <DropDownPicker
-                          open={projectOpen}
-                          value={form?.projectId}
-                          items={projectItems}
-                          setOpen={setProjectOpen}
-                          setValue={(callback) => handleProjectSelect(callback())}
-                          setItems={setProjectItems}
+                          open={projectOpen} value={form?.projectId} items={projectItems}
+                          setOpen={setProjectOpen} setValue={(callback) => handleProjectSelect(callback(form?.projectId))} setItems={setProjectItems}
                           onOpen={() => setReviewOpen(false)}
-                          placeholder="Select or create a project"
-                          listMode="SCROLLVIEW"
-                          style={styles.dropdown}
-                          dropDownContainerStyle={styles.dropdownContainer}
-                          zIndex={3000}
-                          zIndexInverse={1000}
+                          placeholder="Select or create a project" listMode="SCROLLVIEW"
+                          style={styles.dropdown} dropDownContainerStyle={styles.dropdownContainer}
+                          zIndex={3000} zIndexInverse={1000}
                       />
                   </View>
-                  <View style={[styles.fieldContainer, { zIndex: reviewOpen ? 3000 : 1000 }]}>
+                  <View style={[styles.fieldContainer, { zIndex: reviewOpen ? 3000 : 2000 }]}>
                     <Text style={styles.formLabel}>Review Cadence *</Text>
                     <DropDownPicker 
-                      open={reviewOpen} 
-                      value={form.reviewCadence}
-                      items={reviewItems} 
-                      setOpen={setReviewOpen} 
-                      setValue={(callback) => setField('reviewCadence', callback(form.reviewCadence))}
-                      setItems={setReviewItems} 
+                      open={reviewOpen} value={reviewValue} items={reviewItems}
+                      setOpen={setReviewOpen} setValue={setReviewValue} setItems={setReviewItems}
                       onOpen={() => setProjectOpen(false)}
-                      placeholder="Select cadence..." 
-                      style={styles.dropdown} 
-                      dropDownContainerStyle={styles.dropdownContainer} 
-                      listMode="SCROLLVIEW"
-                      zIndex={2000}
-                      zIndexInverse={2000}
+                      placeholder="Select cadence..." style={styles.dropdown}
+                      dropDownContainerStyle={styles.dropdownContainer} listMode="SCROLLVIEW"
+                      zIndex={2000} zIndexInverse={2000}
                     />
                   </View>
               </View>
               )}
           </ScrollView>
           ) : (
-          <TaskList tasks={tasks} isLoading={tasksLoading} navigation={navigation} />
+          <TaskList tasks={tasks} isLoading={tasksLoading} />
           )}
       </View>
     </View>
