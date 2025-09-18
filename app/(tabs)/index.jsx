@@ -7,7 +7,7 @@ import { listMyTasks } from '../../lib/taskRepo';
 import { listMyGoals } from '../../lib/goalRepo';
 import { getOrCreateProfile } from '../../lib/profile';
 
-// --- NEW: Motivational Quotes ---
+
 const QUOTES = [
   { quote: "The secret of getting ahead is getting started.", author: "Mark Twain" },
   { quote: "It’s not whether you get knocked down, it’s whether you get up.", author: "Vince Lombardi" },
@@ -15,9 +15,7 @@ const QUOTES = [
   { quote: "Well done is better than well said.", author: "Benjamin Franklin" },
   { quote: "A goal is a dream with a deadline.", author: "Napoleon Hill" },
 ];
-// ----------------------------
 
-// --- Date Helper Functions (no changes) ---
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 const isUpcoming = (dateString) => {
@@ -37,7 +35,7 @@ const formatDueDate = (dateString) => {
   if (diffDays > 1) return `Due in ${diffDays} days`;
   return 'Overdue';
 };
-// ----------------------------
+
 
 const COLORS = { 
   primary: '#04A777', 
@@ -70,7 +68,7 @@ export default function HomeScreen() {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // NEW: Select a random quote on component load
+  
   const dailyQuote = useMemo(() => QUOTES[Math.floor(Math.random() * QUOTES.length)], []);
 
   useEffect(() => {
@@ -111,7 +109,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* --- NEW: Redesigned Header Section --- */}
+       
         <View style={styles.headerContainer}>
           <Text style={styles.greetingTitle}>Hello, {profile?.name || 'User'}!</Text>
           <View style={styles.quoteContainer}>
@@ -120,9 +118,8 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* --- Daily Stand Up Section --- */}
+        
         <View style={styles.sectionHeader}>
-          {/* UPDATED: Title changed */}
           <Text style={styles.sectionTitle}>Daily Standup</Text>
           <Pressable onPress={() => router.push('/dailystandup')}>
              <Text style={styles.viewAllText}>View All</Text>
@@ -150,7 +147,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* --- Quick Actions Section (no changes) --- */}
+        
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
         </View>
@@ -173,7 +170,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { paddingHorizontal: 16, paddingVertical: 24, },
-  // NEW and UPDATED Styles for the header
   headerContainer: {
     padding: 20,
     backgroundColor: COLORS.primaryLight,
@@ -200,7 +196,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: 4,
   },
-  // ------------------------------------
+  
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -232,7 +228,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   taskIcon: {
-    backgroundColor: 'white', // Changed from primaryLight for better contrast
+    backgroundColor: 'white', 
     borderRadius: 20,
     width: 40,
     height: 40,
