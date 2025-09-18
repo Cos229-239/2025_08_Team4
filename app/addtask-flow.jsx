@@ -220,7 +220,7 @@ export default function AddTaskFlowScreen() {
         startDate: new Date().toISOString().split('T')[0], 
         dueDate: dueDate,
         priority: priority,
-        estimateMinuets: timeInMinutes > 0 ? timeInMinutes : null,
+        estimateMinutes: timeInMinutes > 0 ? timeInMinutes : null,
         status: 'Paused',
         goalId: selectedGoalId, 
       };

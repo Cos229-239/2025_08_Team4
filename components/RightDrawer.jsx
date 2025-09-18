@@ -1,38 +1,48 @@
-import { useEffect, useRef, useState } from "react";
-import { Animated, Dimensions, Pressable, StyleSheet, View, Text } from "react-native";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Animated, Dimensions, Pressable, StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { useRightDrawer } from "./RightDrawerContext";
-import { useRouter, useSegments } from "expo-router";
+import { useRouter, usePathname } from "expo-router"; // Changed useSegments to usePathname
 import { useGlobalContext } from "../context/GlobalProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 
 const PANEL_WIDTH = Math.floor(Dimensions.get("window").width * 0.8);
-const SIGN_OUT_REDIRECT = "/(auth)/welcomescreen";
+const SIGN_OUT_REDIRECT = "/welcomescreen";
 
 const DrawerLink = ({ href, text, iconName }) => {
   const router = useRouter();
-  const segments = useSegments();
+  const pathname = usePathname(); // Use usePathname for an exact match
   const { closeDrawer } = useRightDrawer();
+
+  // This is a more reliable way to check for the active route
+  const isActive = pathname === href;
 
   const handlePress = () => {
     closeDrawer();
-    router.push(href);
+    setTimeout(() => {
+        router.push(href);
+    }, 200);
   };
 
-
-  const isActive = "/" + segments.join("/") === href;
-
   return (
-    <Pressable style={[styles.linkContainer, isActive && styles.activeLink]} onPress={handlePress}>
-      <Ionicons name={iconName} size={24} color="#FFFFFF" style={styles.iconStyle} />
-      <Text style={styles.linkText}>{text}</Text>
-    </Pressable>
+    <TouchableOpacity 
+      style={[styles.linkContainer, isActive && styles.activeLink]} 
+      onPress={handlePress}
+      activeOpacity={0.7}
+    >
+      <Ionicons 
+        name={iconName} 
+        size={24} 
+        color={isActive ? '#FFFFFF' : '#333333'}
+        style={styles.iconStyle} 
+      />
+      <Text style={[styles.linkText, isActive && styles.activeLinkText]}>{text}</Text>
+    </TouchableOpacity>
   );
 };
 
 export default function RightDrawer() {
   const { isOpen, closeDrawer } = useRightDrawer();
-  const { user, isLoggedIn, signOut } = useGlobalContext();
+  const { user, isLoggedIn, signOut, profile } = useGlobalContext();
   const router = useRouter();
 
   const slideX = useRef(new Animated.Value(PANEL_WIDTH)).current;
@@ -60,11 +70,9 @@ export default function RightDrawer() {
         await signOut();
       }
     } catch (err) {
-
       console.warn("Logout warning:", err?.message);
     } finally {
       closeDrawer();
-      router.dismissAll();               
       router.replace(SIGN_OUT_REDIRECT); 
     }
   };
@@ -80,35 +88,29 @@ export default function RightDrawer() {
       </Animated.View>
 
       <Animated.View style={[styles.drawerPanel, { transform: [{ translateX: slideX }] }]}>
-        <LinearGradient
-          colors={["#60A3EF", "#A5F3E2", "#37CAA9"]}
-          locations={[0.1, 0.6, 1.0]}
-          style={StyleSheet.absoluteFill}
-        />
         <View style={styles.drawerContent}>
+          
           <View style={styles.profileSection}>
-            <Ionicons name="person-circle-outline" size={70} color="#FFFFFF" />
+            <Ionicons name="person-circle-outline" size={60} color="#333333" />
+            <Text style={styles.profileName}>{profile?.name || 'User'}</Text>
             <Text style={styles.profileEmail}>{user ? user.email : "Not signed in"}</Text>
           </View>
-          <View style={styles.separator} />
 
-          <Text style={styles.drawerTitle}>Menu</Text>
-          {/* Use full paths (include groups) so matching works reliably */}
-          <DrawerLink href="/about" text="About LucidPaths" iconName="information-circle-outline" />
-          <DrawerLink href="/(drawer)/placeholder" text="Dashboard Overview" iconName="grid-outline" />
-          <DrawerLink href="/(drawer)/settings" text="App Settings" iconName="options-outline" />
-          <DrawerLink href="/(drawer)/ExampleScreen" text="Mountain View" iconName="image-outline" />
-          <DrawerLink href="/(drawer)/fullGoal" text="Goal Details" iconName="checkmark-done-outline" />
-
-          <View style={styles.separator} />
-          <Pressable style={styles.linkContainer} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#FFD700" style={styles.iconStyle} />
-            <Text style={[styles.linkText, { color: "#FFD700" }]}>Sign out</Text>
-          </Pressable>
+          <View style={styles.menuGroup}>
+            <DrawerLink href="/" text="Home" iconName="home-outline" />
+            <DrawerLink href="/goals" text="Goals" iconName="flag-outline" />
+            <DrawerLink href="/(drawer)/ExampleScreen" text="Mountain View" iconName="image-outline" />
+            <DrawerLink href="/settings" text="App Settings" iconName="options-outline" />
+            <DrawerLink href="/about" text="About LucidPaths" iconName="information-circle-outline" />
+          </View>
         </View>
 
         <View style={styles.drawerFooter}>
-          <Text style={styles.footerText}>LucidPaths v1.0.0</Text>
+            <TouchableOpacity style={styles.linkContainer} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={24} color="#EB5757" style={styles.iconStyle} />
+                <Text style={[styles.linkText, { color: "#EB5757" }]}>Sign out</Text>
+            </TouchableOpacity>
+            <Text style={styles.footerText}>LucidPaths v1.0.0</Text>
         </View>
       </Animated.View>
     </View>
@@ -120,38 +122,70 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0, right: 0, bottom: 0,
     width: PANEL_WIDTH,
+    backgroundColor: '#FCFCFD',
     shadowColor: "#000",
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
     elevation: 25,
   },
-  drawerContent: { flex: 1, paddingTop: 80, paddingHorizontal: 20 },
-  profileSection: { alignItems: "center", marginBottom: 20 },
+  drawerContent: { 
+    flex: 1, 
+    paddingTop: 80, 
+  },
+  profileSection: { 
+    alignItems: "center", 
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  profileName: {
+    fontFamily: "Oswald_600SemiBold",
+    fontSize: 22,
+    color: "#333333",
+    marginTop: 12,
+  },
   profileEmail: {
     fontFamily: "OpenSans_400Regular",
-    fontSize: 16,
-    color: "rgba(255, 255, 255, 0.8)",
-    marginTop: 8,
+    fontSize: 14,
+    color: "#828282",
+    marginTop: 4,
   },
-  drawerTitle: { fontFamily: "Oswald_600SemiBold", fontSize: 22, color: "#FFFFFF", marginBottom: 10 },
+  menuGroup: {
+    paddingHorizontal: 15,
+  },
   linkContainer: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 15,
+    borderRadius: 12,
     marginBottom: 5,
     gap: 15,
   },
-  activeLink: { backgroundColor: "rgba(255, 255, 255, 0.15)" },
-  iconStyle: { width: 25, textAlign: "center" },
-  linkText: { fontFamily: "OpenSans_700Bold", color: "#FFFFFF", fontSize: 16 },
-  separator: { height: 1, backgroundColor: "rgba(255, 255, 255, 0.15)", marginVertical: 15 },
+  activeLink: { 
+    backgroundColor: '#04A777',
+  },
+  iconStyle: { 
+    width: 25, 
+    textAlign: "center" 
+  },
+  linkText: { 
+    fontFamily: "OpenSans_700Bold", 
+    color: "#333333",
+    fontSize: 16 
+  },
+  activeLinkText: {
+    color: '#FFFFFF',
+  },
   drawerFooter: {
     padding: 20,
+    alignItems: 'center',
+    gap: 10,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.15)",
-    alignItems: "center",
+    borderTopColor: '#F2F2F2'
   },
-  footerText: { fontFamily: "OpenSans_400Regular", fontSize: 12, color: "rgba(255, 255, 255, 0.7)" },
+  footerText: { 
+    fontFamily: "OpenSans_400Regular", 
+    fontSize: 12, 
+    color: "#BDBDBD"
+  },
 });
