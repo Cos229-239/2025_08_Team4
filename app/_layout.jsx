@@ -1,6 +1,6 @@
 import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Text, View, ActivityIndicator, Pressable } from "react-native";
+import { Text, ActivityIndicator, Pressable } from "react-native";
 import PlusButton from "../components/Buttons/PlusButton";
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 import { RightDrawerProvider, useRightDrawer } from "../components/RightDrawerContext";
@@ -8,8 +8,8 @@ import RightDrawer from "../components/RightDrawer";
 import { useState } from 'react';
 import AddGoal from '../components/Buttons/AddGoal';
 
-
 import GlobalProvider from "../context/GlobalProvider";
+import { ThemeProvider } from "../context/ThemeContext"; // ✅ NEW IMPORT
 
 const HEADER_STYLE = { backgroundColor: "#3177C9" };
 const HEADER_TITLE = (txt) => (
@@ -29,7 +29,7 @@ const HEADER_TITLE = (txt) => (
 
 function TabsContent() {
   const router = useRouter();
-  const { openDrawer } = useRightDrawer(); 
+  const { openDrawer } = useRightDrawer();
   const [fontsLoaded] = useFonts({ Pacifico_400Regular });
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -85,19 +85,18 @@ function TabsContent() {
           }}
           listeners={{ tabPress: (e) => { e.preventDefault(); openDrawer(); } }}
         />
-        
-        {}
+
         <Tabs.Screen name="(drawer)" options={{ href: null, headerShown: false }} />
         <Tabs.Screen name="welcomescreen" options={{ href: null }} />
         <Tabs.Screen name="signup" options={{ href: null }} />
         <Tabs.Screen name="login" options={{ href: null }} />
-        <Tabs.Screen name="dailystandup" options={{ href: null }} /> 
-
+        <Tabs.Screen name="dailystandup" options={{ href: null }} />
       </Tabs>
+
       <RightDrawer />
-      <AddGoal 
-        isVisible={isModalVisible} 
-        onClose={() => setIsModalVisible(false)} 
+      <AddGoal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
       />
     </>
   );
@@ -105,10 +104,12 @@ function TabsContent() {
 
 export default function Layout() {
   return (
-    <GlobalProvider>
-      <RightDrawerProvider>
-        <TabsContent />
-      </RightDrawerProvider>
-    </GlobalProvider>
+    <ThemeProvider> {/* ✅ Wrap everything with ThemeProvider */}
+      <GlobalProvider>
+        <RightDrawerProvider>
+          <TabsContent />
+        </RightDrawerProvider>
+      </GlobalProvider>
+    </ThemeProvider>
   );
 }

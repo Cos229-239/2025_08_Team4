@@ -1,17 +1,30 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function SettingsScreen() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const [isTwoFactor, setIsTwoFactor] = useState(false);
   const [isPushNotifications, setIsPushNotifications] = useState(true);
   const [reminderFrequency, setReminderFrequency] = useState('daily');
 
-//change
+  // Dynamic colors based on dark mode
   const backgroundColor = isDarkMode ? '#002A7C' : '#FFFFFF';
+  const sectionBackgroundColor = isDarkMode ? '#BABAD1' : '#FFFFFF';
+  const sectionBorderColor = isDarkMode ? '#333333' : '#F0F0F0';
 
-  const SettingItem = ({ title, subtitle, onPress, showToggle, toggleValue, onToggleChange, showArrow = true, showFrequency = false, frequencyValue }) => (
+  const SettingItem = ({
+    title,
+    subtitle,
+    onPress,
+    showToggle,
+    toggleValue,
+    onToggleChange,
+    showArrow = true,
+    showFrequency = false,
+    frequencyValue
+  }) => (
     <Pressable style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingContent}>
         <View>
@@ -38,8 +51,11 @@ export default function SettingsScreen() {
   );
 
   return (
-      //change
-    <ScrollView style={[styles.container, { backgroundColor }]} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor }]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Account Section */}
       <View style={styles.section}>
         <LinearGradient
           colors={['#3177C9', '#00C8C8']}
@@ -49,7 +65,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.sectionTitle}>Account</Text>
         </LinearGradient>
-        <View style={styles.sectionContent}>
+        <View style={[styles.sectionContent, { backgroundColor: sectionBackgroundColor, borderColor: sectionBorderColor }]}>
           <SettingItem
             title="Edit Profile"
             subtitle="Update your personal information"
@@ -70,6 +86,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Preferences Section */}
       <View style={styles.section}>
         <LinearGradient
           colors={['#3177C9', '#00C8C8']}
@@ -79,13 +96,13 @@ export default function SettingsScreen() {
         >
           <Text style={styles.sectionTitle}>Preferences</Text>
         </LinearGradient>
-        <View style={styles.sectionContent}>
+        <View style={[styles.sectionContent, { backgroundColor: sectionBackgroundColor, borderColor: sectionBorderColor }]}>
           <SettingItem
             title="Light/Dark Mode"
             subtitle="Choose your preferred theme"
             showToggle={true}
             toggleValue={isDarkMode}
-            onToggleChange={setIsDarkMode}
+            onToggleChange={toggleDarkMode}
           />
           <SettingItem
             title="Push Notifications"
@@ -104,6 +121,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Danger Zone */}
       <View style={styles.section}>
         <LinearGradient
           colors={['#E74C3C', '#C0392B']}
@@ -113,7 +131,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.sectionTitle}>Danger Zone</Text>
         </LinearGradient>
-        <View style={styles.sectionContent}>
+        <View style={[styles.sectionContent, { backgroundColor: sectionBackgroundColor, borderColor: sectionBorderColor }]}>
           <SettingItem
             title="Delete Account"
             subtitle="Permanently remove your account and data"

@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="02f4e75e-b0a3-41e6-bb03-80d5fe57b3a1" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(drawer)/settings.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(drawer)/settings.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/_layout.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.jsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,6 +41,11 @@
     &quot;git-widget-placeholder&quot;: &quot;aLiriano&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\GitRepo\PAP23\2025_08_Team4\context" />
+    </key>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="02f4e75e-b0a3-41e6-bb03-80d5fe57b3a1" name="Changes" comment="" />
