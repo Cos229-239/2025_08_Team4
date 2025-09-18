@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, StatusBar, TextInput, TouchableOpacity, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import Icon from 'react-native-vector-icons/Feather';
+import { Ionicons } from '@expo/vector-icons';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
-import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
-import { LinearGradient } from 'expo-linear-gradient';
+import { OpenSans_700Bold } from '@expo-google-fonts/open-sans'; 
 import { useGlobalContext } from '../context/GlobalProvider';
+import Icon from 'react-native-vector-icons/Feather';
 
 const LOGIN_SUCCESS_REDIRECT = '/';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { signIn } = useGlobalContext();
-  const [fontsLoaded] = useFonts({ Oswald_600SemiBold, Pacifico_400Regular });
+  const [fontsLoaded] = useFonts({ Oswald_600SemiBold, OpenSans_700Bold });
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,51 +38,29 @@ export default function LoginScreen() {
   if (!fontsLoaded) return <ActivityIndicator />;
 
   return (
-    <LinearGradient
-      colors={['#3177C9', '#30F0C8']}
-      locations={[0.37, 0.61]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: '',
-          headerTintColor: '#fff',
-          headerShadowVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.replace('/welcomescreen')}
-              style={{ paddingHorizontal: 12, paddingVertical: 8 }}
-            >
-              <Icon name="chevron-left" size={28} color="#fff" />
-            </TouchableOpacity>
-          ),
-        }}
-      />
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="dark-content" />
 
-      <StatusBar barStyle="light-content" />
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.form}>
-          <Text style={styles.label}>Email Address</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="someone@example.com"
-            placeholderTextColor="#9CA3AF"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
+      <View style={styles.content}>
+        <Text style={styles.title}>Welcome back!</Text>
+        <Text style={styles.subtitle}>Glad to see you. Again!</Text>
 
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your email"
+          placeholderTextColor="#8A8A8E"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
+        
+        <View style={styles.inputContainer}>
             <TextInput
               style={styles.inputField}
-              placeholder="********"
-              placeholderTextColor="#9CA3AF"
+              placeholder="Enter your password"
+              placeholderTextColor="#8A8A8E"
               secureTextEntry={!isPasswordVisible}
               value={password}
               onChangeText={setPassword}
@@ -90,80 +68,138 @@ export default function LoginScreen() {
             <TouchableOpacity onPress={() => setIsPasswordVisible(v => !v)}>
               <Icon name={isPasswordVisible ? 'eye-off' : 'eye'} size={22} color="#9CA3AF" />
             </TouchableOpacity>
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={busy}>
-              {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log In</Text>}
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Don't have an account? </Text>
-            <Pressable onPress={() => router.push('/signup')}>
-              <Text style={[styles.signupText, styles.signupLink]}>Sign up here</Text>
-            </Pressable>
-          </View>
         </View>
-      </SafeAreaView>
-    </LinearGradient>
+
+        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={busy}>
+          {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Login</Text>}
+        </TouchableOpacity>
+
+        <Text style={styles.orText}>Or Login with</Text>
+
+        <View style={styles.socialRow}>
+          <TouchableOpacity style={styles.socialButton}>
+            <Ionicons name="logo-facebook" size={24} color="#1877F2" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton}>
+            <Ionicons name="logo-google" size={24} color="#DB4437" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton}>
+            <Ionicons name="logo-apple" size={24} color="#000000" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.signupContainer}>
+          <Text style={styles.signupText}>Don't have an account? </Text>
+          <Pressable onPress={() => router.push('/signup')}>
+            <Text style={[styles.signupText, styles.signupLink]}>Register Now</Text>
+          </Pressable>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  safeArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  form: { width: '85%' },
-  label: {
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  title: {
     fontFamily: 'Oswald_600SemiBold',
-    fontSize: 24,
-    color: '#FFFFFF',
-    lineHeight: 28,
-    letterSpacing: -0.48,
+    fontSize: 32,
+    color: '#37CAA9',
+    textAlign: 'center',
     marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+  },
+  subtitle: {
+    fontFamily: 'OpenSans_700Bold',
+    fontSize: 16,
+    color: '#8A8A8E',
+    textAlign: 'center',
+    marginBottom: 40,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    backgroundColor: '#F7F7F7',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderRadius: 12,
     fontSize: 16,
-    color: '#111827',
-    marginBottom: 30,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#000000',
+    borderColor: '#EFEFEF',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 20,
+    backgroundColor: '#F7F7F7',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#000000',
+    borderColor: '#EFEFEF',
+    paddingHorizontal: 20,
   },
-  inputField: { flex: 1, paddingVertical: 12, fontSize: 16, color: '#111827' },
-  buttonContainer: { width: '100%', alignItems: 'center' },
+  inputField: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+  },
   button: {
-    backgroundColor: '#004496',
-    height: 43,
-    width: 130,
-    borderRadius: 24,
+    backgroundColor: '#37CAA9',
+    paddingVertical: 18,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
+    marginTop: 24,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  
   },
-  buttonText: { fontFamily: 'Oswald_600SemiBold', fontSize: 24, color: '#FFFFFF' },
-  signupContainer: { flexDirection: 'row', justifyContent: 'center', marginTop: 15 },
-  signupText: { color: '#FFFFFF', fontSize: 14 },
-  signupLink: { fontWeight: 'bold' },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontFamily: 'OpenSans_700Bold',
+  },
+  orText: {
+    fontSize: 14,
+    color: '#8A8A8E',
+    textAlign: 'center',
+    marginVertical: 30,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+  },
+  socialButton: {
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 40,
+  },
+  signupText: {
+    color: '#8A8A8E',
+    fontSize: 14,
+  },
+  signupLink: {
+    color: '#3177C9',
+    fontWeight: 'bold',
+  },
 });

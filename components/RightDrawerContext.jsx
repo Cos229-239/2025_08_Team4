@@ -1,4 +1,3 @@
-// components/RightDrawerContext.jsx
 import { createContext, useContext, useMemo, useState } from "react";
 
 const RightDrawerContext = createContext({

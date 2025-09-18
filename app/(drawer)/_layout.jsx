@@ -33,20 +33,24 @@ export default function DrawerLayout() {
         headerTintColor: "#fff",
       }}
     >
-      <Stack.Screen 
-        name="settings" 
-        options={{ 
-          headerTitle: () => HEADER_TITLE("Settings"),
-          headerLeft: () => (
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </Pressable>
-          ),
-        }} 
-      />
+      <Stack.Screen
+  name="settings"
+  options={{
+    headerStyle: { backgroundColor: "#F8F9FA" }, 
+    headerShadowVisible: false, 
+    headerTitle: "Settings",
+    headerTitleStyle: {
+      fontFamily: "Oswald_600SemiBold",
+      fontSize: 22,
+    },
+    headerTintColor: '#212529',
+   
+  }}
+/>
       <Stack.Screen 
         name="about" 
         options={{ 
+          headerShown: false,
           headerTitle: () => HEADER_TITLE("About LucidPaths"),
           headerLeft: () => (
             <Pressable style={styles.backButton} onPress={() => router.back()}>

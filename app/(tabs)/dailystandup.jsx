@@ -1,197 +1,221 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Pressable, StatusBar } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router'; // REMOVED useNavigation
 import { Ionicons } from '@expo/vector-icons';
-import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
-import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
-import { LinearGradient } from 'expo-linear-gradient';
+import Checkbox from 'expo-checkbox';
+import { listMyTasks, upsertTask } from '../../lib/taskRepo'; // Adjust the import path as needed
 
-const HEADER_TITLE = () => (
-  <Text
-    style={{
-      fontFamily: "Pacifico_400Regular",
-      fontSize: 36,
-      color: "#FFFFFF",
-      textAlign: "center",
-    }}
-  >
-    Daily Standup
-  </Text>
+// --- Date Helper Functions (no changes) ---
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const isSameDay = (date1, date2) => (
+  date1.getFullYear() === date2.getFullYear() &&
+  date1.getMonth() === date2.getMonth() &&
+  date1.getDate() === date2.getDate()
 );
+const isYesterday = (dateString) => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return isSameDay(new Date(dateString), yesterday);
+};
+const isToday = (dateString) => {
+  if (!dateString) return false;
+  return isSameDay(new Date(dateString), new Date());
+};
+const isUpcoming = (dateString) => {
+  if (!dateString) return false;
+  const checkDate = new Date(dateString);
+  checkDate.setHours(0, 0, 0, 0);
+  return checkDate.getTime() > today.getTime();
+};
+// ------------------------------------------
 
-const TaskList = ({ data, completed }) => (
-    <View style={styles.taskListContainer}>
-        {data.map((task, index) => (
-            <View
-                key={task.id}
-                style={[
-                    styles.taskItem,
-                    index % 2 === 0 ? styles.taskItemEven : styles.taskItemOdd,
-                ]}
-            >
-                <Ionicons
-                    name={completed ? "checkbox-outline" : "square-outline"}
-                    size={24}
-                    color={completed ? "#3177C9" : "#333"}
-                />
-                <Text style={styles.taskTitleText}>{task.title}</Text>
-                <Text style={styles.taskDueDate}>{task.dueDate}</Text>
-                <Ionicons name="chevron-forward-outline" size={24} color="#333" />
-            </View>
-        ))}
+const COLORS = { 
+  primary: '#04A777', 
+  primaryLight: '#30C49F',
+  background: '#F8F9FA', 
+  card: '#FFFFFF', 
+  text: '#212529', 
+  textSecondary: '#6C757D', 
+  border: '#E9ECEF',
+  iconPrimary: '#04A777',
+};
+
+const DateHeader = ({ date }) => {
+  const formattedDate = date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  return (
+    <View style={styles.dateHeaderContainer}>
+      {/* FIX 1: Combined emoji and text into one string to prevent the error */}
+      <Text style={styles.dateHeaderText}>{`📅 ${formattedDate}`}</Text>
     </View>
+  );
+};
+
+// --- TaskItem, EmptyState, and TaskSection components remain the same ---
+const TaskItem = ({ title, detailText, isCompleted, onToggle, onNavigate }) => (
+  <Pressable style={styles.itemContainer} onPress={onNavigate}>
+    <Checkbox style={styles.checkbox} value={isCompleted} onValueChange={onToggle} color={isCompleted ? COLORS.primary : undefined} />
+    <View style={styles.itemTextContainer}>
+      <Text style={[styles.itemLabel, isCompleted && styles.completedText]}>{title}</Text>
+      {detailText && <Text style={styles.itemSublabel}>{detailText}</Text>}
+    </View>
+    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
+  </Pressable>
 );
+
+const EmptyState = ({ message }) => (
+  <View style={styles.emptyContainer}><Text style={styles.emptyText}>{message}</Text></View>
+);
+
+const TaskSection = ({ title, tasks, emptyMessage, onToggle, onNavigate, sectionType, iconName }) => (
+  <>
+    <View style={styles.sectionHeaderContainer}>
+      {iconName && <Ionicons name={iconName} size={20} color={COLORS.iconPrimary} style={styles.sectionIcon} />}
+      <Text style={styles.sectionHeader}>{title}</Text>
+    </View>
+    <View style={styles.card}>
+      {tasks.length > 0 ? (
+        tasks.map((task, index) => {
+          let detailText = null;
+          if (sectionType === 'upcoming' || sectionType === 'today') {
+            detailText = `Due ${new Date(task.dueDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}`;
+          } else if (sectionType === 'allCompleted' || sectionType === 'yesterdayCompleted') {
+            detailText = `Completed ${new Date(task.$updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+          }
+
+          return (
+            <React.Fragment key={task.$id}>
+              <TaskItem
+                title={task.title}
+                detailText={detailText}
+                isCompleted={task.status === 'Completed'}
+                onToggle={() => onToggle(task)}
+                onNavigate={() => onNavigate(task.goalId, task.$id)}
+              />
+              {index < tasks.length - 1 && <View style={styles.divider} />}
+            </React.Fragment>
+          );
+        })
+      ) : (
+        <EmptyState message={emptyMessage} />
+      )}
+    </View>
+  </>
+);
+
 
 export default function DailyStandupScreen() {
-    const router = useRouter();
-    const [fontsLoaded] = useFonts({
-        Oswald_600SemiBold,
-        Pacifico_400Regular,
-    });
+  const router = useRouter();
+  const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    if (!fontsLoaded) {
-        return null;
+  const fetchTasks = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const fetchedTasks = await listMyTasks();
+      setTasks(fetchedTasks);
+    } catch (error) {
+      console.error("Failed to fetch tasks:", error);
+      alert("Could not load your tasks.");
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
-    const completedTasks = [
-        { id: '1', title: 'Completed Task 1', dueDate: 'Completed yesterday' },
-        { id: '2', title: 'Completed Task 2', dueDate: 'Completed yesterday' },
-        { id: '3', title: 'Completed Task 3', dueDate: 'Completed yesterday' },
-        { id: '4', title: 'Completed Task 4', dueDate: 'Completed yesterday' },
-        { id: '5', title: 'Completed Task 5', dueDate: 'Completed yesterday' },
-    ];
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
-    const todaysTasks = [
-        { id: '1', title: 'Today\'s Task 1', dueDate: 'Due today' },
-        { id: '2', title: 'Today\'s Task 2', dueDate: 'Due today' },
-        { id: '3', title: 'Today\'s Task 3', dueDate: 'Due today' },
-    ];
+  // FIX 2: The entire useLayoutEffect block has been removed to prevent conflict with the layout file.
+  
+  const { completedYesterday, dueToday, upcoming, allCompleted } = useMemo(() => {
+    const incompleteStatuses = ['Paused', 'Active', 'Not Started'];
+    
+    return {
+      completedYesterday: tasks.filter(t => t.status === 'Completed' && isYesterday(t.$updatedAt)),
+      dueToday: tasks.filter(t => incompleteStatuses.includes(t.status) && isToday(t.dueDate)),
+      upcoming: tasks.filter(t => incompleteStatuses.includes(t.status) && isUpcoming(t.dueDate)),
+      allCompleted: tasks.filter(t => t.status === 'Completed'),
+    };
+  }, [tasks]);
 
-    const upcomingTasks = [
-        { id: '1', title: 'Upcoming Task 1', dueDate: 'Due tomorrow' },
-        { id: '2', title: 'Upcoming Task 2', dueDate: 'Due in 2 days' },
-        { id: '3', title: 'Upcoming Task 3', dueDate: 'Due in 4 days' },
-        { id: '4', title: 'Upcoming Task 4', dueDate: 'Due in 5 days' },
-        { id: '5', title: 'Upcoming Task 5', dueDate: 'Due next week' },
-    ];
+  const handleToggleTask = async (task) => {
+    const isNowCompleted = task.status !== 'Completed';
+    const newStatus = isNowCompleted ? 'Completed' : 'Active';
+    
+    try {
+      await upsertTask({ ...task, status: newStatus });
+      await fetchTasks();
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      alert("Could not update the task.");
+    }
+  };
 
-    const blockers = [
-        { id: '1', title: 'Blocker 1', dueDate: 'Task 5 - Goal 10' },
-        { id: '2', title: 'Blocker 2', dueDate: 'Task 4 - Goal 8' },
-    ];
+  const handleNavigate = (goalId, taskId) => {
+    router.push(`/ViewTask?taskId=${taskId}`);
+  };
 
-    return (
-        <LinearGradient
-            colors={['#3177C9', '#30F0C8']}
-            locations={[0.37, 0.61]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.container}
-        >
-            <Stack.Screen
-                options={{
-                    headerTitle: () => HEADER_TITLE(),
-                    headerShown: true,
-                    headerTransparent: true,
-                    headerTintColor: '#fff',
-                    headerLeft: () => (
-                        <Pressable onPress={() => router.replace('/')} style={{ marginLeft: 15 }}>
-                            <Ionicons name="arrow-back-outline" size={24} color="#fff" />
-                        </Pressable>
-                    ),
-                }}
-            />
-            <StatusBar barStyle="light-content" />
-            <SafeAreaView style={styles.safeArea}>
-                <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <Text style={styles.dateHeader}>Today's Date</Text>
-                    
-                    <View style={styles.taskSection}>
-                        <Text style={styles.sectionHeadingText}>Look at all you complete yesterday! Keep it Going!</Text>
-                        <TaskList data={completedTasks} completed={true} />
-                    </View>
+  if (isLoading) {
+    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
+  }
 
-                    <View style={styles.taskSection}>
-                        <Text style={styles.sectionHeadingText}>Lets plan out our day, here is what we have to do!</Text>
-                        <TaskList data={todaysTasks} completed={false} />
-                    </View>
-
-                    <View style={styles.taskSection}>
-                        <Text style={styles.sectionHeadingText}>Here's whats coming up next.</Text>
-                        <TaskList data={upcomingTasks} completed={false} />
-                    </View>
-
-                    <View style={styles.taskSection}>
-                        <Text style={styles.sectionHeadingText}>Here is a list of your blockers.</Text>
-                        <TaskList data={blockers} completed={false} />
-                    </View>
-                </ScrollView>
-            </SafeAreaView>
-        </LinearGradient>
-    );
+  return (
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <DateHeader date={new Date()} />
+        <TaskSection title="Yesterday's Progress" tasks={completedYesterday} emptyMessage="No tasks completed yesterday." onToggle={handleToggleTask} onNavigate={handleNavigate} sectionType="yesterdayCompleted" iconName="checkmark-circle-outline"/>
+        <TaskSection title="Today's Focus" tasks={dueToday} emptyMessage="You're all caught up for today! 🎉" onToggle={handleToggleTask} onNavigate={handleNavigate} sectionType="today" iconName="today-outline"/>
+        <TaskSection title="What's Next" tasks={upcoming} emptyMessage="No upcoming tasks. Plan ahead!" onToggle={handleToggleTask} onNavigate={handleNavigate} sectionType="upcoming" iconName="calendar-outline"/>
+        <TaskSection title="All Completed" tasks={allCompleted} emptyMessage="No tasks have been completed yet." onToggle={handleToggleTask} onNavigate={handleNavigate} sectionType="allCompleted" iconName="albums-outline"/>
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
+// Styles remain the same
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    safeArea: {
-        flex: 1,
-        paddingHorizontal: 16,
-    },
-    scrollContent: {
-        flexGrow: 1,
-        paddingTop: 120, 
-        paddingBottom: 20,
-    },
-    dateHeader: {
-        fontFamily: 'Oswald_600SemiBold',
-        fontSize: 16,
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    sectionHeadingText: {
-        fontFamily: 'Oswald_600SemiBold',
-        fontSize: 16,
-        color: '#fff',
-        marginBottom: 10,
-    },
-    taskSection: {
-        marginBottom: 20,
-    },
-    taskListContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        borderWidth: 2,
-        borderColor: '#3177C9',
-        overflow: 'hidden',
-    },
-    taskItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    taskItemEven: {
-        backgroundColor: '#F0F8FF',
-    },
-    taskItemOdd: {
-        backgroundColor: '#fff',
-    },
-    taskTitleText: {
-        flex: 1,
-        fontFamily: 'Oswald_600SemiBold',
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#333',
-    },
-    taskDueDate: {
-        fontFamily: 'Oswald_600SemiBold',
-        fontSize: 14,
-        color: '#666',
-        marginRight: 10,
-    },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background },
+  scrollContent: { padding: 16 },
+  dateHeaderContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  dateHeaderText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    marginLeft: 8,
+  },
+  sectionIcon: {
+    marginRight: 8,
+  },
+  sectionHeader: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: COLORS.textSecondary, 
+    textTransform: 'uppercase', 
+  },
+  card: { backgroundColor: COLORS.card, borderRadius: 12, marginBottom: 24, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border },
+  itemContainer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: COLORS.card },
+  checkbox: { marginRight: 16, borderRadius: 6 },
+  itemTextContainer: { flex: 1, justifyContent: 'center' },
+  itemLabel: { fontSize: 16, color: COLORS.text, fontWeight: '500' },
+  completedText: { textDecorationLine: 'line-through', color: COLORS.textSecondary },
+  itemSublabel: { fontSize: 13, color: COLORS.primaryLight, marginTop: 4, fontWeight: '600' }, 
+  divider: { height: 1, backgroundColor: '#F1F3F5', marginLeft: 50 },
+  emptyContainer: { padding: 20, alignItems: 'center' },
+  emptyText: { fontSize: 15, color: COLORS.textSecondary, fontStyle: 'italic' },
 });

@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, TextInput, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, StyleSheet, Modal, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
-import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
-
-const GoalSelector = () => (
-  <View style={styles.dropdown}>
-    <Text style={styles.dropdownText}>Select one of your Summits</Text>
-    <Ionicons name="chevron-down-outline" size={24} color="#333" />
-  </View>
-);
+import { OpenSans_400Regular } from '@expo-google-fonts/open-sans';
 
 export default function AddGoal({ isVisible, onClose }) {
-  const [activeTab, setActiveTab] = useState('goal');
+  const router = useRouter();
   const [fontsLoaded] = useFonts({
     Oswald_600SemiBold,
-    OpenSans_700Bold,
+    OpenSans_400Regular,
   });
 
   if (!fontsLoaded) {
     return null;
   }
+
+  const handleNavigate = (path) => {
+    onClose(); 
+    router.push(path); 
+  };
 
   return (
     <Modal
@@ -29,177 +29,107 @@ export default function AddGoal({ isVisible, onClose }) {
       transparent={true}
       visible={isVisible}
       onRequestClose={onClose}
-      statusBarTranslucent={true}
     >
-      <Pressable style={styles.fullScreenContainer} onPress={onClose}>
-        <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
-        <Pressable onPress={(e) => e.stopPropagation()}>
-          <View style={styles.modalView}>
-            
-            <View style={styles.tabContainer}>
-              <TouchableOpacity 
-                style={[styles.tab, activeTab === 'goal' && styles.activeTab]} 
-                onPress={() => setActiveTab('goal')}
+      <BlurView intensity={100} tint="dark" style={styles.blurView}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={styles.modalContentContainer}>
+          <Text style={styles.modalTitle}>What do you want to add?</Text>
+          <View style={styles.buttonRow}>
+            <Pressable 
+              style={styles.choiceButtonOuter} 
+              onPress={() => handleNavigate('/addgoal-flow')} 
+            >
+              <LinearGradient
+                colors={['#C060A1', '#FF9F00']}
+                start={[0, 0]} end={[1, 1]}
+                style={styles.choiceButtonGradient}
               >
-                <Text style={[styles.tabText, activeTab === 'goal' && styles.activeTabText]}>NEW GOAL</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.tab, activeTab === 'task' && styles.activeTab]} 
-                onPress={() => setActiveTab('task')}
-              >
-                <Text style={[styles.tabText, activeTab === 'task' && styles.activeTabText]}>NEW TASK</Text>
-              </TouchableOpacity>
-            </View>
+                <Ionicons name="flag-outline" size={30} color="#FFFFFF" />
+                <Text style={styles.choiceButtonText}>Add Goal</Text>
+                <Text style={styles.choiceButtonDescription}>Set a new long-term objective</Text>
+              </LinearGradient>
+            </Pressable>
             
-            {activeTab === 'goal' ? (
-              <>
-                <Text style={styles.label}>Goal Title</Text>
-                <TextInput style={styles.input} placeholder="Get Promotion" placeholderTextColor="#BDBDBD" />
-              </>
-            ) : (
-              <>
-                <Text style={styles.label}>Choose Goal</Text>
-                <View style={styles.dropdown}>
-                  <Text style={styles.dropdownText}>Select one of your Summits</Text>
-                  <Ionicons name="chevron-down-outline" size={24} color="#333" />
-                </View>
-                <Text style={styles.label}>Task Title</Text>
-                <TextInput style={styles.input} placeholder="Explain the goal in one to two words." placeholderTextColor="#BDBDBD" />
-              </>
-            )}
-
-            <View style={styles.buttonRow}>
-              <Pressable style={styles.button} onPress={onClose}>
-                <View style={styles.buttonInnerShadow} />
-                <Text style={styles.textStyle}>Cancel</Text>
-              </Pressable>
-              <Pressable style={styles.button}>
-                <View style={styles.buttonInnerShadow} />
-                <Text style={styles.textStyle}>Add</Text>
-              </Pressable>
-            </View>
+            
+            <Pressable 
+              style={styles.choiceButtonOuter} 
+              onPress={() => handleNavigate('/addtask-flow')} 
+            >
+              <LinearGradient
+                colors={['#4C7AFB', '#2A3C8A']} 
+                start={[0, 0]} end={[1, 1]}
+                style={styles.choiceButtonGradient}
+              >
+                <Ionicons name="clipboard-outline" size={30} color="#FFFFFF" />
+                <Text style={styles.choiceButtonText}>Add Task</Text>
+                <Text style={styles.choiceButtonDescription}>Add a task to an existing goal</Text>
+              </LinearGradient>
+            </Pressable>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </BlurView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  fullScreenContainer: {
+  blurView: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end', 
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingBottom: 100, 
   },
-  modalView: {
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 25,
-    paddingTop: 15,
-    alignItems: 'stretch',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
-    width: 350, 
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 25,
-    justifyContent: 'space-around',
-  },
-  tab: {
-    minWidth: 100,
-    paddingBottom: 12,
+  modalContentContainer: {
     alignItems: 'center',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#F2F2F2',
+    width: '90%', 
   },
-  activeTab: {
-    borderBottomWidth: 3,
-    borderBottomColor: '#000000',
-  },
-  tabText: {
-    color: '#A0A0A0',
-    fontSize: 14,
+  modalTitle: {
     fontFamily: 'Oswald_600SemiBold',
-  },
-  activeTabText: {
-    color: '#000000',
-    fontFamily: 'Oswald_600SemiBold',
-  },
-  label: {
-    fontFamily: 'Oswald_600SemiBold',
-    fontSize: 18,
-    color: '#000',
-    marginBottom: 10,
-  },
-  input: {
-    width: '100%',
-    fontFamily: 'Oswald_600SemiBold',
-    height: 45,
-    borderColor: '#E0E0E0',
-    borderWidth: 1,
-    borderRadius: 8,
+    fontSize: 24,
+    color: 'white',
     marginBottom: 20,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: '#333',
-  },
-  dropdown: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: 45,
-    borderColor: '#E0E0E0',
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 20,
-    paddingHorizontal: 15,
-  },
-  dropdownText: {
-    color: '#BDBDBD',
-    fontSize: 16,
-    fontFamily: 'Oswald_600SemiBold',
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 15,
+    width: '100%',
+    gap: 15, 
   },
-  button: {
-    backgroundColor: '#50E3C2',
-    height: 48,
+  choiceButtonOuter: {
     flex: 1,
-    marginHorizontal: 8,
-    borderRadius: 24,
+    borderRadius: 30, 
+    borderWidth: 3, 
+    borderColor: '#000',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10,
+    overflow: 'hidden', 
+  },
+  choiceButtonGradient: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
-  buttonInnerShadow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  textStyle: {
+  choiceButtonText: {
     color: 'white',
     fontSize: 18,
     fontFamily: 'Oswald_600SemiBold',
+    marginTop: 10,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  choiceButtonDescription: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    fontFamily: 'OpenSans_400Regular',
+    textAlign: 'center',
+    marginTop: 5,
   },
 });

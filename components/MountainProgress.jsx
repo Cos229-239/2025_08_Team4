@@ -90,7 +90,7 @@ export default function MountainProgress({
     return Array.from({ length: total }, (_, i) => getPointAlongPolyline(route, (i + 1) / total));
   }, [total, route]);
 
-  // Animated climber
+ 
   const anim = useRef(new Animated.Value(0)).current;
   const [climber, setClimber] = useState(getPointAlongPolyline(route, progress));
 
@@ -118,7 +118,7 @@ export default function MountainProgress({
 
   const summit = route[route.length - 1];
 
-  // Clouds animation (gentle drift)
+  
   const cloudAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.loop(
@@ -130,42 +130,42 @@ export default function MountainProgress({
   }, [cloudAnim]);
   const cloudTranslate = cloudAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 12], // small horizontal drift
+    outputRange: [0, 12], 
   });
 
-  // Animated group wrapper for clouds
+  
   const AnimatedG = Animated.createAnimatedComponent(G);
 
   return (
     <View style={styles.root} pointerEvents="none">
       <Svg width={width} height={height}>
         <Defs>
-          {/* sky gradient */}
+         
           <LinearGradient id="sky" x1="0" y1="0" x2="0" y2={height}>
             <Stop offset="0" stopColor="#bfe4ff" />
             <Stop offset="1" stopColor="#eaf7ff" />
           </LinearGradient>
-          {/* wall gradient */}
+          
           <LinearGradient id="wall" x1="0" y1="0" x2="0" y2={height}>
             <Stop offset="0" stopColor="#7b6f66" />
             <Stop offset="1" stopColor="#5e544d" />
           </LinearGradient>
-          {/* rock shading bands */}
+         
           <LinearGradient id="wallShade" x1="0" y1="0" x2="1" y2="0">
             <Stop offset="0" stopColor="#000" stopOpacity="0.10" />
             <Stop offset="1" stopColor="#000" stopOpacity="0" />
           </LinearGradient>
-          {/* rope */}
+          
           <LinearGradient id="rope" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor="#2d2d2d" />
             <Stop offset="1" stopColor="#111" />
           </LinearGradient>
         </Defs>
 
-        {/* Left half: sky */}
+        
         <Rect x={0} y={0} width={midX} height={height} fill="url(#sky)" />
 
-        {/* Subtle mountains silhouettes far left (for depth) */}
+        
         <Path
           d={`M 0 ${height * 0.75} 
               L ${midX * 0.2} ${height * 0.55} 

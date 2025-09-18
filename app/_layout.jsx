@@ -5,6 +5,8 @@ import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import GlobalProvider, { useGlobalContext } from '../context/GlobalProvider';
 import { useEffect } from 'react';
 import { RightDrawerProvider } from '../components/RightDrawerContext';
+import { MenuProvider } from 'react-native-popup-menu';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,6 +53,7 @@ function RootLayoutNav() {
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="profile" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -59,7 +62,11 @@ export default function RootLayout() {
   return (
     <GlobalProvider>
       <RightDrawerProvider>
-        <RootLayoutNav />
+        <MenuProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
+        </MenuProvider>
       </RightDrawerProvider>
     </GlobalProvider>
   );

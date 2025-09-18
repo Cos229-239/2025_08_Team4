@@ -1,204 +1,134 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function SettingsScreen() {
-  const router = useRouter();
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isTwoFactor, setIsTwoFactor] = useState(false);
-  const [isPushNotifications, setIsPushNotifications] = useState(true);
-  const [reminderFrequency, setReminderFrequency] = useState('daily');
+const COLORS = {
+  primary: '#04A777',
+  background: '#F8F9FA',
+  card: '#FFFFFF',
+  text: '#212529',
+  textSecondary: '#6C757D',
+  border: '#E9ECEF',
+  danger: '#D9534F',
+};
 
-  const SettingItem = ({ title, subtitle, onPress, showToggle, toggleValue, onToggleChange, showArrow = true, showFrequency = false, frequencyValue }) => (
-    <Pressable style={styles.settingItem} onPress={onPress}>
-      <View style={styles.settingContent}>
-        <View>
-          <Text style={styles.settingTitle}>{title}</Text>
-          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
-        </View>
-        {showToggle ? (
-          <Switch
-            value={toggleValue}
-            onValueChange={onToggleChange}
-            trackColor={{ false: '#E0E0E0', true: '#3177C9' }}
-            thumbColor={'#FFFFFF'}
-          />
-        ) : showFrequency ? (
-          <View style={styles.frequencyContainer}>
-            <Text style={styles.frequencyText}>{frequencyValue}</Text>
-            <Text style={styles.arrow}>›</Text>
-          </View>
-        ) : showArrow ? (
-          <Text style={styles.arrow}>›</Text>
-        ) : null}
+
+const SettingItem = ({ label, sublabel, type, value, onValueChange, onPress }) => {
+  return (
+    <Pressable onPress={onPress} style={styles.itemContainer} disabled={!onPress}>
+      <View style={styles.itemTextContainer}>
+        <Text style={[styles.itemLabel, type === 'danger' && styles.dangerText]}>{label}</Text>
+        {sublabel && <Text style={styles.itemSublabel}>{sublabel}</Text>}
       </View>
+      {type === 'navigation' && <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />}
+      {type === 'toggle' && <Switch trackColor={{ false: COLORS.border, true: COLORS.primary }} thumbColor={"#f4f3f4"} onValueChange={onValueChange} value={value} />}
+      {type === 'value' && <Text style={styles.itemValue}>{value}</Text>}
     </Pressable>
   );
+};
+
+
+export default function SettingsScreen() {
+  
+  const [is2FAEnabled, set2FAEnabled] = useState(false);
+  const [isDarkMode, setDarkMode] = useState(false);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const reminderSchedule = 'Daily';
+  
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.section}>
-        <LinearGradient
-          colors={['#3177C9', '#00C8C8']}
-          style={styles.sectionTitleGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        >
-          <Text style={styles.sectionTitle}>Account</Text>
-        </LinearGradient>
-        <View style={styles.sectionContent}>
-          <SettingItem
-            title="Edit Profile"
-            subtitle="Update your personal information"
-            onPress={() => router.push('/(drawer)/editprofile')}
-          />
-          <SettingItem
-            title="Change Password"
-            subtitle="Update your account password"
-            onPress={() => router.push('/(drawer)/changepassword')}
-          />
-          <SettingItem
-            title="Two-Factor Authentication"
-            subtitle="Add an extra layer of security"
-            showToggle={true}
-            toggleValue={isTwoFactor}
-            onToggleChange={setIsTwoFactor}
-          />
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        
+        <Text style={styles.sectionHeader}>Account</Text>
+        <View style={styles.card}>
+          <SettingItem label="Edit Profile" sublabel="Update your personal information" type="navigation" onPress={() => alert("Navigate to Edit Profile")} />
+          <View style={styles.divider} />
+          <SettingItem label="Change Password" sublabel="Update your account password" type="navigation" onPress={() => alert("Navigate to Change Password")} />
+          <View style={styles.divider} />
+          <SettingItem label="Two-Factor Authentication" sublabel="Add an extra layer of security" type="toggle" value={is2FAEnabled} onValueChange={set2FAEnabled} />
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <LinearGradient
-          colors={['#3177C9', '#00C8C8']}
-          style={styles.sectionTitleGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-        >
-          <Text style={styles.sectionTitle}>Preferences</Text>
-        </LinearGradient>
-        <View style={styles.sectionContent}>
-          <SettingItem
-            title="Light/Dark Mode"
-            subtitle="Choose your preferred theme"
-            showToggle={true}
-            toggleValue={isDarkMode}
-            onToggleChange={setIsDarkMode}
-          />
-          <SettingItem
-            title="Push Notifications"
-            subtitle="Receive notifications about your goals"
-            showToggle={true}
-            toggleValue={isPushNotifications}
-            onToggleChange={setIsPushNotifications}
-          />
-          <SettingItem
-            title="Reminder Schedule"
-            subtitle="Choose how often you want reminders"
-            onPress={() => {}}
-            showFrequency={true}
-            frequencyValue={reminderFrequency}
-          />
+        <Text style={styles.sectionHeader}>Preferences</Text>
+        <View style={styles.card}>
+          <SettingItem label="Light/Dark Mode" sublabel="Choose your preferred theme" type="toggle" value={isDarkMode} onValueChange={setDarkMode} />
+          <View style={styles.divider} />
+          <SettingItem label="Push Notifications" sublabel="Receive notifications about your goals" type="toggle" value={pushNotifications} onValueChange={setPushNotifications} />
+          <View style={styles.divider} />
+          <SettingItem label="Reminder Schedule" sublabel="Choose how often you want reminders" type="value" value={reminderSchedule} onPress={() => alert("Open Reminder Schedule options")} />
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <LinearGradient
-          colors={['#E74C3C', '#C0392B']}
-          style={styles.sectionTitleGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <Text style={styles.sectionTitle}>Danger Zone</Text>
-        </LinearGradient>
-        <View style={styles.sectionContent}>
-          <SettingItem
-            title="Delete Account"
-            subtitle="Permanently remove your account and data"
-            onPress={() => {}}
-            showArrow={false}
-          />
+        <Text style={styles.sectionHeader}>Danger Zone</Text>
+        <View style={styles.card}>
+          <SettingItem label="Delete Account" sublabel="Permanently remove your account and data" type="danger" onPress={() => alert("Open Delete Account confirmation")} />
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingTop: 20,
-    paddingHorizontal: 20,
+    backgroundColor: COLORS.background,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16, 
+    paddingBottom: 24,
   },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitleGradient: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    textAlign: 'center',
-  },
-  sectionContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-  },
-  settingItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  settingContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  settingTitle: {
+  sectionHeader: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333333',
-    marginBottom: 2,
+    color: COLORS.textSecondary,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    marginLeft: 8,
   },
-  settingSubtitle: {
-    fontSize: 14,
-    color: '#666666',
-    lineHeight: 18,
+  card: {
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    marginBottom: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  arrow: {
-    fontSize: 20,
-    color: '#3177C9',
-    fontWeight: '600',
-  },
-  frequencyContainer: {
+  itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: COLORS.card,
   },
-  frequencyText: {
-    fontSize: 14,
-    color: '#3177C9',
+  itemTextContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  itemLabel: {
+    fontSize: 16,
+    color: COLORS.text,
     fontWeight: '500',
-    textTransform: 'capitalize',
+  },
+  itemSublabel: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  itemValue: {
+    fontSize: 16,
+    color: COLORS.primary,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F3F5',
+    marginLeft: 16,
+  },
+  dangerText: {
+    color: COLORS.danger,
   },
 });

@@ -1,4 +1,3 @@
-// app/(drawer)/placeholder.jsx
 import React, { useState } from "react";
 import {
   View,
@@ -19,9 +18,9 @@ export default function TestDataPort() {
   const { isLoggedIn, isLoading, logSession } = useGlobalContext();
 
   const [goalTitle, setGoalTitle] = useState("Test Goal");
-  const [successCriteria, setSuccessCriteria] = useState(""); // saved as 'sucessCriteria' per your schema
-  const [targetDateStr, setTargetDateStr] = useState("");     // YYYY-MM-DD
-  const [tagsInput, setTagsInput] = useState("");             // comma-separated tags
+  const [successCriteria, setSuccessCriteria] = useState(""); 
+  const [targetDateStr, setTargetDateStr] = useState("");    
+  const [tagsInput, setTagsInput] = useState("");            
   const [log, setLog] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -97,14 +96,14 @@ export default function TestDataPort() {
   async function attachGoalTag({ userId, goalId, tagId }) {
     return databases.createDocument(
       DB_ID,
-      COL.GOAL_TAGS, // make sure this constant exists in lib/ids
+      COL.GOAL_TAGS, 
       ID.unique(),
       {
         ownerId: userId,
-        goal: goalId,     // relationship field (if you added it)
-        goalId: goalId,   // shadow string you indexed
-        tag: tagId,       // relationship field
-        tagId: tagId,     // shadow string
+        goal: goalId,     
+        goalId: goalId,   
+        tag: tagId,       
+        tagId: tagId,    
       },
       ownerPerms(userId)
     );
