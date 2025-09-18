@@ -10,11 +10,9 @@ import {
   Platform, 
   Alert,
   ScrollView,
-  Pressable,
   ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Stack } from 'expo-router';
 import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
@@ -22,18 +20,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { account } from '../../lib/appwrite';
 
-const HEADER_TITLE = () => (
-  <Text
-    style={{
-      fontFamily: "Pacifico_400Regular",
-      fontSize: 36,
-      color: "#FFFFFF",
-      textAlign: "center",
-    }}
-  >
-    Change Password
-  </Text>
-);
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
@@ -195,21 +181,6 @@ export default function ChangePasswordScreen() {
       end={{ x: 1, y: 1 }}
       style={styles.container}
     >
-      <Stack.Screen
-        options={{
-          headerTitle: () => HEADER_TITLE(),
-          headerShown: true,
-          headerTransparent: false,
-          headerStyle: { backgroundColor: '#3177C9' },
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerLeft: () => (
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </Pressable>
-          ),
-        }}
-      />
       
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView

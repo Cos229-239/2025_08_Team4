@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 const COLORS = {
@@ -30,6 +31,7 @@ const SettingItem = ({ label, sublabel, type, value, onValueChange, onPress }) =
 
 
 export default function SettingsScreen() {
+  const router = useRouter();
   
   const [is2FAEnabled, set2FAEnabled] = useState(false);
   const [isDarkMode, setDarkMode] = useState(false);
@@ -44,9 +46,9 @@ export default function SettingsScreen() {
         
         <Text style={styles.sectionHeader}>Account</Text>
         <View style={styles.card}>
-          <SettingItem label="Edit Profile" sublabel="Update your personal information" type="navigation" onPress={() => alert("Navigate to Edit Profile")} />
+          <SettingItem label="Edit Profile" sublabel="Update your personal information" type="navigation" onPress={() => router.push('/(drawer)/editprofile')} />
           <View style={styles.divider} />
-          <SettingItem label="Change Password" sublabel="Update your account password" type="navigation" onPress={() => alert("Navigate to Change Password")} />
+          <SettingItem label="Change Password" sublabel="Update your account password" type="navigation" onPress={() => router.push('/(drawer)/changepassword')} />
           <View style={styles.divider} />
           <SettingItem label="Two-Factor Authentication" sublabel="Add an extra layer of security" type="toggle" value={is2FAEnabled} onValueChange={set2FAEnabled} />
         </View>

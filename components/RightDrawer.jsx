@@ -100,8 +100,8 @@ export default function RightDrawer() {
             <DrawerLink href="/" text="Home" iconName="home-outline" />
             <DrawerLink href="/goals" text="Goals" iconName="flag-outline" />
             <DrawerLink href="/(drawer)/ExampleScreen" text="Mountain View" iconName="image-outline" />
-            <DrawerLink href="/settings" text="App Settings" iconName="options-outline" />
-            <DrawerLink href="/about" text="About LucidPaths" iconName="information-circle-outline" />
+            <DrawerLink href="/(drawer)/settings" text="App Settings" iconName="options-outline" />
+            <DrawerLink href="/(drawer)/about" text="About LucidPaths" iconName="information-circle-outline" />
           </View>
         </View>
 

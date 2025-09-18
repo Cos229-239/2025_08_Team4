@@ -10,11 +10,9 @@ import {
   Platform, 
   Alert,
   ScrollView,
-  Pressable,
   ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Stack } from 'expo-router';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { Oswald_600SemiBold } from '@expo-google-fonts/oswald';
@@ -25,22 +23,10 @@ import { useGlobalContext } from '../../context/GlobalProvider';
 import { account } from '../../lib/appwrite';
 import { updateProfile } from '../../lib/profile';
 
-const HEADER_TITLE = () => (
-  <Text
-    style={{
-      fontFamily: "Pacifico_400Regular",
-      fontSize: 36,
-      color: "#FFFFFF",
-      textAlign: "center",
-    }}
-  >
-    Edit Profile
-  </Text>
-);
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { user, refresh } = useGlobalContext();
+  const { user, profile, refresh } = useGlobalContext();
   const [fontsLoaded, fontError] = useFonts({
     Pacifico_400Regular,
     Oswald_600SemiBold,
@@ -126,14 +112,15 @@ const [showPassword, setShowPassword] = useState(false);
     if (user) {
       setName(user.name || '');
       setEmail(user.email || '');
-      // Load preferences if they exist
-      if (user.prefs) {
-        setLanguageValue(user.prefs.language || null);
-        setPronounsValue(user.prefs.pronouns || null);
-        setCountryValue(user.prefs.country || null);
-      }
     }
-  }, [user]);
+    
+    // Load profile data from database
+    if (profile) {
+      setLanguageValue(profile.language || null);
+      setPronounsValue(profile.pronouns || null);
+      setCountryValue(profile.country || null);
+    }
+  }, [user, profile]);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -155,14 +142,6 @@ const [showPassword, setShowPassword] = useState(false);
     setIsLoading(true);
   
     try {
-      // Update user preferences
-      const prefs = {
-        language: languageValue,
-        pronouns: pronounsValue,
-        country: countryValue,
-        onboardingCompleted: user?.prefs?.onboardingCompleted || false,
-      };
-  
       // Update the users name in Appwrite
       await account.updateName(name.trim());
       
@@ -171,17 +150,33 @@ const [showPassword, setShowPassword] = useState(false);
         await account.updateEmail(email.trim(), password);
       }
   
-      // Update user preferences
-      await account.updatePrefs(prefs);
-  
       // Update profile database with the new information
-      await updateProfile({
+      console.log('Updating profile with data:', {
         name: name.trim(),
         email: email.trim(),
         language: languageValue,
         pronouns: pronounsValue,
         country: countryValue,
       });
+      
+      const updatedProfile = await updateProfile({
+        name: name.trim(),
+        email: email.trim(),
+        language: languageValue,
+        pronouns: pronounsValue,
+        country: countryValue,
+      });
+      
+      console.log('Profile updated successfully:', updatedProfile);
+  
+      // Update user preferences to keep them in sync
+      const prefs = {
+        language: languageValue,
+        pronouns: pronounsValue,
+        country: countryValue,
+        onboardingCompleted: user?.prefs?.onboardingCompleted || false,
+      };
+      await account.updatePrefs(prefs);
   
       // Refresh user data from Appwrite to get the latest information
       await refresh();
@@ -228,19 +223,6 @@ const [showPassword, setShowPassword] = useState(false);
       end={{ x: 1, y: 1 }}
       style={styles.container}
     >
-      <Stack.Screen
-        options={{
-          headerTitle: () => HEADER_TITLE(),
-          headerTransparent: true,
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerLeft: () => (
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </Pressable>
-          ),
-        }}
-      />
       
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView

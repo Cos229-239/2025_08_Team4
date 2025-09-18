@@ -1,6 +1,7 @@
 import { Stack, useRouter } from "expo-router";
 import { Text, Pressable, StyleSheet } from "react-native";
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
+import { Oswald_600SemiBold } from "@expo-google-fonts/oswald";
 import { Ionicons } from '@expo/vector-icons';
 
 const HEADER_TITLE = (txt) => (
@@ -19,6 +20,7 @@ export default function DrawerLayout() {
   const router = useRouter();
   const [fontsLoaded] = useFonts({
     Pacifico_400Regular,
+    Oswald_600SemiBold,
   });
 
   if (!fontsLoaded) {
@@ -34,19 +36,70 @@ export default function DrawerLayout() {
       }}
     >
       <Stack.Screen
-  name="settings"
-  options={{
-    headerStyle: { backgroundColor: "#F8F9FA" }, 
-    headerShadowVisible: false, 
-    headerTitle: "Settings",
-    headerTitleStyle: {
-      fontFamily: "Oswald_600SemiBold",
-      fontSize: 22,
-    },
-    headerTintColor: '#212529',
-   
-  }}
-/>
+        name="settings"
+        options={{
+          headerStyle: { backgroundColor: "#F8F9FA" }, 
+          headerShadowVisible: false, 
+          headerTitle: "Settings",
+          headerTitleStyle: {
+            fontFamily: "Oswald_600SemiBold",
+            fontSize: 22,
+          },
+          headerTintColor: '#212529',
+        }}
+      />
+      <Stack.Screen
+        name="editprofile"
+        options={{
+          headerShown: true,
+          headerTransparent: true,
+          headerTintColor: '#fff',
+          headerTitleAlign: 'center',
+          headerTitle: () => (
+            <Text
+              style={{
+                fontFamily: "Pacifico_400Regular",
+                fontSize: 36,
+                color: "#FFFFFF",
+                textAlign: "center",
+              }}
+            >
+              Edit Profile
+            </Text>
+          ),
+          headerLeft: () => (
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="white" />
+            </Pressable>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="changepassword"
+        options={{
+          headerShown: true,
+          headerTransparent: true,
+          headerTintColor: '#fff',
+          headerTitleAlign: 'center',
+          headerTitle: () => (
+            <Text
+              style={{
+                fontFamily: "Pacifico_400Regular",
+                fontSize: 36,
+                color: "#FFFFFF",
+                textAlign: "center",
+              }}
+            >
+              Change Password
+            </Text>
+          ),
+          headerLeft: () => (
+            <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="white" />
+            </Pressable>
+          ),
+        }}
+      />
       <Stack.Screen 
         name="about" 
         options={{ 
