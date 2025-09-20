@@ -209,41 +209,42 @@ const [showPassword, setShowPassword] = useState(false);
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3177C9" />
+        <ActivityIndicator size="large" color="#04A777" />
         <Text style={styles.loadingText}>Loading fonts...</Text>
       </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={['#3177C9', '#30F0C8']}
-      locations={[0.37, 0.61]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.keyboardAvoidingContainer}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-          enabled={false}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardAvoidingContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        enabled={false}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled={true}
+          bounces={false}
+          overScrollMode="never"
+          keyboardDismissMode="on-drag"
+          scrollEventThrottle={16}
         >
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled={true}
-            bounces={false}
-            overScrollMode="never"
-            keyboardDismissMode="on-drag"
-            scrollEventThrottle={16}
-          >
-              <View style={styles.formContainer}>
-                <Text style={styles.sectionTitle}>Personal Information</Text>
+          <View style={styles.formContainer}>
+            <Text style={styles.pageSubtitle}>Update your personal information and preferences</Text>
+              
+              <Text style={styles.sectionTitle}>Personal Information</Text>
                 
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Name</Text>
@@ -317,13 +318,14 @@ const [showPassword, setShowPassword] = useState(false);
                         <Ionicons 
                           name={showPassword ? "eye-off" : "eye"} 
                           size={20} 
-                          color="#666666" 
+                          color="#04A777" 
                         />
                       </TouchableOpacity>
                     </View>
                   </View>
                 )}
 
+                <View style={styles.sectionDivider} />
                 <Text style={styles.sectionTitle}>Preferences</Text>
 
                 <View style={styles.inputGroup}>
@@ -384,6 +386,7 @@ const [showPassword, setShowPassword] = useState(false);
                   style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
                   onPress={handleSave}
                   disabled={isLoading}
+                  activeOpacity={0.8}
                 >
                   {isLoading ? (
                     <ActivityIndicator color="#FFFFFF" />
@@ -394,20 +397,43 @@ const [showPassword, setShowPassword] = useState(false);
               </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  header: {
+    backgroundColor: '#04A777',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerTitle: {
+    fontFamily: 'Pacifico_400Regular',
+    fontSize: 32,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerSpacer: {
+    width: 40,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA',
   },
   loadingText: {
     marginTop: 10,
@@ -418,7 +444,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA',
     padding: 20,
   },
   errorText: {
@@ -428,7 +454,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#3177C9',
+    backgroundColor: '#04A777',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -438,9 +464,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  safeArea: {
-    flex: 1,
-  },
   keyboardAvoidingContainer: {
     flex: 1,
   },
@@ -449,19 +472,34 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: 120,
+    paddingTop: 24,
     paddingBottom: 100,
     paddingHorizontal: 24,
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
     padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  pageTitle: {
+    fontFamily: 'Pacifico_400Regular',
+    fontSize: 32,
+    color: '#27AE60',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  pageSubtitle: {
+    fontFamily: 'OpenSans_700Bold',
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 22,
   },
   backButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -479,8 +517,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#333333',
     marginBottom: 20,
-    marginTop: 10,
-    textAlign: 'center',
+    marginTop: 20,
+    textAlign: 'left',
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#E5E5EA',
+    marginVertical: 20,
+    marginHorizontal: -10,
   },
   inputGroup: {
     marginBottom: 20,
@@ -501,6 +545,20 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5EA',
     fontFamily: 'OpenSans_700Bold',
     color: '#333333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputFocused: {
+    borderColor: '#3177C9',
+    borderWidth: 2,
+    shadowColor: '#3177C9',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   passwordInputContainer: {
     flexDirection: 'row',
@@ -510,6 +568,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E5EA',
     paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   passwordInput: {
     flex: 1,
@@ -520,6 +583,8 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     padding: 8,
+    borderRadius: 6,
+    backgroundColor: 'rgba(4, 167, 119, 0.1)',
   },
   dropdown: {
     backgroundColor: '#FFFFFF',
@@ -527,19 +592,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E5EA',
     height: 58,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   dropdownContainer: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   saveButton: {
-    backgroundColor: '#3177C9',
+    backgroundColor: '#04A777',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 30,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -560,7 +635,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#3177C9',
+    borderLeftColor: '#04A777',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   emailChangeTitle: {
     fontFamily: 'Oswald_600SemiBold',

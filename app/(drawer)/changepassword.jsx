@@ -167,42 +167,40 @@ export default function ChangePasswordScreen() {
   if (!fontsLoaded) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3177C9" />
+        <ActivityIndicator size="large" color="#04A777" />
         <Text style={styles.loadingText}>Loading fonts...</Text>
       </View>
     );
   }
 
   return (
-    <LinearGradient
-      colors={['#3177C9', '#30F0C8']}
-      locations={[0.37, 0.61]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
-      
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.keyboardAvoidingContainer}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-          enabled={false}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Change Password</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardAvoidingContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        enabled={false}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled={true}
+          bounces={false}
+          overScrollMode="never"
+          keyboardDismissMode="on-drag"
+          scrollEventThrottle={16}
         >
-          <ScrollView 
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled={true}
-            bounces={false}
-            overScrollMode="never"
-            keyboardDismissMode="on-drag"
-            scrollEventThrottle={16}
-          >
-            <View style={styles.formContainer}>
-              <Text style={styles.sectionTitle}>Security</Text>
-              <Text style={styles.subtitle}>Update your account password to keep your account secure</Text>
+          <View style={styles.formContainer}>
+            <Text style={styles.pageSubtitle}>Update your account password to keep your account secure</Text>
               
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Current Password</Text>
@@ -231,9 +229,11 @@ export default function ChangePasswordScreen() {
                     style={styles.eyeButton}
                     onPress={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
-                    <Text style={styles.eyeButtonText}>
-                      {showCurrentPassword ? '👁️' : '👁️‍🗨️'}
-                    </Text>
+                    <Ionicons 
+                      name={showCurrentPassword ? "eye-off" : "eye"} 
+                      size={20} 
+                      color="#04A777" 
+                    />
                   </TouchableOpacity>
                 </View>
                 {errors.currentPassword && (
@@ -268,9 +268,11 @@ export default function ChangePasswordScreen() {
                     style={styles.eyeButton}
                     onPress={() => setShowNewPassword(!showNewPassword)}
                   >
-                    <Text style={styles.eyeButtonText}>
-                      {showNewPassword ? '👁️' : '👁️‍🗨️'}
-                    </Text>
+                    <Ionicons 
+                      name={showNewPassword ? "eye-off" : "eye"} 
+                      size={20} 
+                      color="#04A777" 
+                    />
                   </TouchableOpacity>
                 </View>
                 {errors.newPassword && (
@@ -305,9 +307,11 @@ export default function ChangePasswordScreen() {
                     style={styles.eyeButton}
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    <Text style={styles.eyeButtonText}>
-                      {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
-                    </Text>
+                    <Ionicons 
+                      name={showConfirmPassword ? "eye-off" : "eye"} 
+                      size={20} 
+                      color="#04A777" 
+                    />
                   </TouchableOpacity>
                 </View>
                 {errors.confirmPassword && (
@@ -328,6 +332,7 @@ export default function ChangePasswordScreen() {
                 style={[styles.changeButton, isLoading && styles.changeButtonDisabled]} 
                 onPress={handleChangePassword}
                 disabled={isLoading}
+                activeOpacity={0.8}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#FFFFFF" />
@@ -338,20 +343,43 @@ export default function ChangePasswordScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
+  header: {
+    backgroundColor: '#04A777',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerTitle: {
+    fontFamily: 'Pacifico_400Regular',
+    fontSize: 32,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    flex: 1,
+  },
+  headerSpacer: {
+    width: 40,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA',
   },
   loadingText: {
     marginTop: 10,
@@ -362,7 +390,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#F8F9FA',
     padding: 20,
   },
   errorText: {
@@ -372,7 +400,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#3177C9',
+    backgroundColor: '#04A777',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -382,9 +410,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  safeArea: {
-    flex: 1,
-  },
   keyboardAvoidingContainer: {
     flex: 1,
   },
@@ -393,19 +418,34 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: 20,
+    paddingTop: 24,
     paddingBottom: 100,
     paddingHorizontal: 24,
   },
   formContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
     padding: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  pageTitle: {
+    fontFamily: 'Pacifico_400Regular',
+    fontSize: 32,
+    color: '#27AE60',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  pageSubtitle: {
+    fontFamily: 'OpenSans_700Bold',
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 30,
+    lineHeight: 22,
   },
   backButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -417,20 +457,6 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     borderWidth: 2,
     borderColor: '#2A6BB8',
-  },
-  sectionTitle: {
-    fontFamily: 'Oswald_600SemiBold',
-    fontSize: 24,
-    color: '#333333',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666666',
-    textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 22,
   },
   inputGroup: {
     marginBottom: 20,
@@ -449,6 +475,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E5EA',
     paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   inputError: {
     borderColor: '#E74C3C',
@@ -463,9 +494,8 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     padding: 8,
-  },
-  eyeButtonText: {
-    fontSize: 18,
+    borderRadius: 6,
+    backgroundColor: 'rgba(4, 167, 119, 0.1)',
   },
   requirementsContainer: {
     backgroundColor: '#F8F9FA',
@@ -473,7 +503,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#3177C9',
+    borderLeftColor: '#04A777',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   requirementsTitle: {
     fontFamily: 'Oswald_600SemiBold',
@@ -488,11 +523,11 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   changeButton: {
-    backgroundColor: '#3177C9',
+    backgroundColor: '#04A777',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

@@ -51,53 +51,13 @@ export default function DrawerLayout() {
       <Stack.Screen
         name="editprofile"
         options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerTitle: () => (
-            <Text
-              style={{
-                fontFamily: "Pacifico_400Regular",
-                fontSize: 36,
-                color: "#FFFFFF",
-                textAlign: "center",
-              }}
-            >
-              Edit Profile
-            </Text>
-          ),
-          headerLeft: () => (
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </Pressable>
-          ),
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name="changepassword"
         options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTintColor: '#fff',
-          headerTitleAlign: 'center',
-          headerTitle: () => (
-            <Text
-              style={{
-                fontFamily: "Pacifico_400Regular",
-                fontSize: 36,
-                color: "#FFFFFF",
-                textAlign: "center",
-              }}
-            >
-              Change Password
-            </Text>
-          ),
-          headerLeft: () => (
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="white" />
-            </Pressable>
-          ),
+          headerShown: false,
         }}
       />
       <Stack.Screen 
