@@ -12,6 +12,8 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { listTasksUpToDuration } from "../../lib/taskRepo";
@@ -26,6 +28,25 @@ export default function TaskAttack() {
   const [error, setError] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
+
+  // --- NEW: simple click handlers you can connect to your repo later ---
+  const handleTaskPress = (task) => {
+    console.log("Card pressed:", task.$id);
+    // e.g., navigate to details or expand the card
+    Alert.alert("Task", task.title || "(Untitled Task)");
+  };
+  const handleStart = (task) => {
+    console.log("Start pressed:", task.$id);
+    // TODO: await updateTaskStatus(task.$id, 'in_progress')
+  };
+  const handlePause = (task) => {
+    console.log("Pause pressed:", task.$id);
+    // TODO: await updateTaskStatus(task.$id, 'paused')
+  };
+  const handleDone = (task) => {
+    console.log("Done pressed:", task.$id);
+    // TODO: await updateTaskStatus(task.$id, 'done')
+  };
 
   // Build enum list from 10/15/30-minute increments (deduped) up to 60
   const minuteOptions = useMemo(() => {
@@ -66,11 +87,22 @@ export default function TaskAttack() {
 
   const TaskCard = ({ item }) => {
     const isDone = ["done", "completed"].includes(String(item.status || "").toLowerCase());
+    const canStart = !isDone && item.status !== "in_progress";
+    const canPause = !isDone && item.status === "in_progress";
+
     return (
-      <View style={styles.card}>
+      <Pressable
+        onPress={() => handleTaskPress(item)}
+        android_ripple={{ color: "rgba(0,0,0,0.06)" }}
+        style={({ pressed }) => [
+          styles.card,
+          pressed && { transform: [{ scale: 0.995 }] },
+        ]}
+      >
         <View style={styles.cardLeftIcon}>
           <Ionicons name={isDone ? "checkmark-done-outline" : "flash-outline"} size={22} color="#2B8C7E" />
         </View>
+
         <View style={{ flex: 1 }}>
           <Text style={styles.cardTitle} numberOfLines={1}>
             {item.title || "(Untitled Task)"}
@@ -80,11 +112,45 @@ export default function TaskAttack() {
             {item.dueDate ? `  •  ${item.dueDate}` : ""}
             {item.priority != null ? `  •  P${item.priority}` : ""}
           </Text>
+
           {item.notes ? <Text style={styles.cardNotes} numberOfLines={2}>{item.notes}</Text> : null}
+
           <View style={styles.progressTrack}><View style={[styles.progressFill, { width: "0%" }]} /></View>
           <Text style={styles.progressLabel}>0% Complete</Text>
+
+          {/* --- NEW: clickable actions row --- */}
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              onPress={() => handleStart(item)}
+              disabled={!canStart}
+              style={[styles.actionBtn, !canStart && styles.actionBtnDisabled]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="play" size={16} color={canStart ? "#0F766E" : "#94A3B8"} />
+              <Text style={[styles.actionText, !canStart && styles.actionTextDisabled]}>Start</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handlePause(item)}
+              disabled={!canPause}
+              style={[styles.actionBtn, !canPause && styles.actionBtnDisabled]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="pause" size={16} color={canPause ? "#92400E" : "#94A3B8"} />
+              <Text style={[styles.actionText, !canPause && styles.actionTextDisabled]}>Pause</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handleDone(item)}
+              style={styles.actionBtn}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="checkmark" size={16} color="#166534" />
+              <Text style={styles.actionText}>Done</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </Pressable>
     );
   };
 
@@ -95,6 +161,8 @@ export default function TaskAttack() {
         style={styles.selectTrigger}
         onPress={() => { setSearch(""); setPickerOpen(true); }}
         accessibilityRole="button"
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }} // easier to tap
+        activeOpacity={0.7}
       >
         <Ionicons name="time-outline" size={18} color="#6B7280" />
         <Text style={styles.selectText}>
@@ -143,6 +211,7 @@ export default function TaskAttack() {
                     <TouchableOpacity
                       style={[styles.optionRow, selected && styles.optionRowActive]}
                       onPress={() => { setMinutes(m); setPickerOpen(false); }}
+                      activeOpacity={0.7}
                     >
                       <Text style={[styles.optionText, selected && styles.optionTextActive]}>{m} minutes</Text>
                       {selected && <Ionicons name="checkmark" size={18} color="#37C6AD" />}
@@ -175,6 +244,7 @@ export default function TaskAttack() {
         keyExtractor={(item) => item.$id}
         renderItem={({ item }) => <TaskCard item={item} />}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"   // <--- ensure taps not swallowed
         ListEmptyComponent={
           minutes == null
             ? <Text style={styles.hint}>Select a time above to get started.</Text>
@@ -275,6 +345,26 @@ const styles = StyleSheet.create({
   progressTrack: { height: 6, backgroundColor: "#EEF2F7", borderRadius: 999, marginTop: 10, overflow: "hidden" },
   progressFill: { height: "100%", backgroundColor: "#E2E8F0", borderRadius: 999 },
   progressLabel: { marginTop: 6, color: "#9CA3AF", fontSize: 12 },
+
+  /* NEW: actions row + buttons */
+  actionsRow: { flexDirection: "row", gap: 8, marginTop: 10 },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  actionBtnDisabled: {
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
+  },
+  actionText: { fontWeight: "700", color: "#111827" },
+  actionTextDisabled: { color: "#94A3B8" },
 
   error: { color: "#EF4444", marginTop: 6 },
   empty: { color: "#6B7280", marginTop: 16, textAlign: "center" },
