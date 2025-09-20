@@ -21,7 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { account } from '../../lib/appwrite';
-import { updateProfile } from '../../lib/profile';
+import { updateProfile, BARRIER_LABEL_TO_CODE } from '../../lib/profile';
 
 
 export default function EditProfileScreen() {
@@ -39,6 +39,14 @@ const [email, setEmail] = useState('');
 const [password, setPassword] = useState('');
 const [isLoading, setIsLoading] = useState(false);
 const [showPassword, setShowPassword] = useState(false);
+
+// Barriers state (from step2)
+const [selectedBarriers, setSelectedBarriers] = useState([]);
+
+// Goal habits state (from step3)
+const [timeSpentValue, setTimeSpentValue] = useState(null);
+const [timeGoalValue, setTimeGoalValue] = useState(null);
+const [reminderValue, setReminderValue] = useState(null);
 
   // Dropdown states
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -107,6 +115,54 @@ const [showPassword, setShowPassword] = useState(false);
     { label: 'Other', value: 'other' },
   ]);
 
+  // Goal habits dropdown states
+  const [timeSpentOpen, setTimeSpentOpen] = useState(false);
+  const [timeSpentItems] = useState([
+    { label: 'Less than 1 hour', value: 'lt1' },
+    { label: '1-5 hours', value: '1-5' },
+    { label: '5-10 hours', value: '5-10' },
+    { label: '10+ hours', value: '10+' },
+  ]);
+
+  const [timeGoalOpen, setTimeGoalOpen] = useState(false);
+  const [timeGoalItems] = useState([
+    { label: '1-5 hours', value: '1-5' },
+    { label: '5-10 hours', value: '5-10' },
+    { label: '10-20 hours', value: '10-20' },
+    { label: '20+ hours', value: '20+' },
+  ]);
+
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderItems] = useState([
+    { label: 'Daily', value: 'daily' },
+    { label: 'Every few days', value: 'fewdays' },
+    { label: 'Weekly', value: 'weekly' },
+    { label: 'Monthly', value: 'monthly' },
+  ]);
+
+  // Barriers data
+  const barriers = [
+    'Lack of Motivation',
+    'Time Management Issues',
+    'Fear of Failure',
+    'Lack of Clear Goals',
+    'Procrastination',
+    'Self-Doubt',
+    'Distractions',
+    'Overwhelming',
+  ];
+
+  // Convert barrier codes back to labels for display
+  const convertBarrierCodesToLabels = (barrierCodes) => {
+    if (!Array.isArray(barrierCodes)) return [];
+    const codeToLabel = Object.fromEntries(
+      Object.entries(BARRIER_LABEL_TO_CODE).map(([label, code]) => [code, label])
+    );
+    return barrierCodes
+      .map(code => codeToLabel[code])
+      .filter(Boolean);
+  };
+
   // Load user data on component mount
   useEffect(() => {
     if (user) {
@@ -116,11 +172,25 @@ const [showPassword, setShowPassword] = useState(false);
     
     // Load profile data from database
     if (profile) {
+      console.log('Loading profile data:', profile);
       setLanguageValue(profile.language || null);
       setPronounsValue(profile.pronouns || null);
       setCountryValue(profile.country || null);
+      // Convert barrier codes back to labels for display
+      const convertedBarriers = convertBarrierCodesToLabels(profile.barriers || []);
+      console.log('Converted barriers:', convertedBarriers);
+      setSelectedBarriers(convertedBarriers);
+      setTimeSpentValue(profile.timeSpentMonthly || null);
+      setTimeGoalValue(profile.timeGoalMonthly || null);
+      setReminderValue(profile.reminderFrequency || null);
     }
   }, [user, profile]);
+
+  const handleToggleBarrier = (barrier) => {
+    setSelectedBarriers((prev) =>
+      prev.includes(barrier) ? prev.filter((b) => b !== barrier) : [...prev, barrier]
+    );
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -150,6 +220,11 @@ const [showPassword, setShowPassword] = useState(false);
         await account.updateEmail(email.trim(), password);
       }
   
+      // Convert barrier labels back to codes for saving
+      const barrierCodes = selectedBarriers
+        .map(label => BARRIER_LABEL_TO_CODE[label])
+        .filter(Boolean);
+
       // Update profile database with the new information
       console.log('Updating profile with data:', {
         name: name.trim(),
@@ -157,14 +232,22 @@ const [showPassword, setShowPassword] = useState(false);
         language: languageValue,
         pronouns: pronounsValue,
         country: countryValue,
+        barriers: barrierCodes,
+        timeSpentMonthly: timeSpentValue,
+        timeGoalMonthly: timeGoalValue,
+        reminderFrequency: reminderValue,
       });
-      
+
       const updatedProfile = await updateProfile({
         name: name.trim(),
         email: email.trim(),
         language: languageValue,
         pronouns: pronounsValue,
         country: countryValue,
+        barriers: barrierCodes,
+        timeSpentMonthly: timeSpentValue,
+        timeGoalMonthly: timeGoalValue,
+        reminderFrequency: reminderValue,
       });
       
       console.log('Profile updated successfully:', updatedProfile);
@@ -377,6 +460,87 @@ const [showPassword, setShowPassword] = useState(false);
                     style={styles.dropdown}
                     dropDownContainerStyle={styles.dropdownContainer}
                     zIndex={1000}
+                    zIndexInverse={3000}
+                    listMode="SCROLLVIEW"
+                  />
+                </View>
+
+                <View style={styles.sectionDivider} />
+                <Text style={styles.sectionTitle}>Challenges & Goals</Text>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>What's Holding You Back?</Text>
+                  <Text style={styles.subLabel}>Select any challenges you face in achieving your goals.</Text>
+                  <View style={styles.barriersContainer}>
+                    {barriers.map((barrier) => (
+                      <TouchableOpacity
+                        key={barrier}
+                        style={styles.barrierItem}
+                        onPress={() => handleToggleBarrier(barrier)}
+                      >
+                        <View style={[
+                          styles.checkbox,
+                          selectedBarriers.includes(barrier) && styles.checkboxChecked
+                        ]}>
+                          {selectedBarriers.includes(barrier) && (
+                            <Ionicons name="checkmark" size={18} color="white" />
+                          )}
+                        </View>
+                        <Text style={styles.barrierLabel}>{barrier}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>How much time do you currently spend on your goals per month?</Text>
+                  <DropDownPicker
+                    open={timeSpentOpen}
+                    value={timeSpentValue}
+                    items={timeSpentItems}
+                    setOpen={setTimeSpentOpen}
+                    setValue={setTimeSpentValue}
+                    onOpen={() => { setTimeGoalOpen(false); setReminderOpen(false); setLanguageOpen(false); setPronounsOpen(false); setCountryOpen(false); }}
+                    placeholder="Select an option"
+                    style={styles.dropdown}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                    zIndex={6000}
+                    zIndexInverse={1000}
+                    listMode="SCROLLVIEW"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>How much time would you like to spend?</Text>
+                  <DropDownPicker
+                    open={timeGoalOpen}
+                    value={timeGoalValue}
+                    items={timeGoalItems}
+                    setOpen={setTimeGoalOpen}
+                    setValue={setTimeGoalValue}
+                    onOpen={() => { setTimeSpentOpen(false); setReminderOpen(false); setLanguageOpen(false); setPronounsOpen(false); setCountryOpen(false); }}
+                    placeholder="Select an option"
+                    style={styles.dropdown}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                    zIndex={5000}
+                    zIndexInverse={2000}
+                    listMode="SCROLLVIEW"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>How often do you want to be reminded?</Text>
+                  <DropDownPicker
+                    open={reminderOpen}
+                    value={reminderValue}
+                    items={reminderItems}
+                    setOpen={setReminderOpen}
+                    setValue={setReminderValue}
+                    onOpen={() => { setTimeSpentOpen(false); setTimeGoalOpen(false); setLanguageOpen(false); setPronounsOpen(false); setCountryOpen(false); }}
+                    placeholder="Select an option"
+                    style={styles.dropdown}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                    zIndex={4000}
                     zIndexInverse={3000}
                     listMode="SCROLLVIEW"
                   />
@@ -671,5 +835,51 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E5E5EA',
+  },
+  subLabel: {
+    fontFamily: 'OpenSans_700Bold',
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  barriersContainer: {
+    marginTop: 8,
+  },
+  barrierItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#C7C7CC',
+    marginRight: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#04A777',
+    borderColor: '#04A777',
+  },
+  barrierLabel: {
+    fontSize: 16,
+    color: '#333333',
+    fontFamily: 'OpenSans_700Bold',
+    flex: 1,
   },
 });
