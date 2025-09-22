@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { RightDrawerProvider } from '../components/RightDrawerContext';
 import { MenuProvider } from 'react-native-popup-menu';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { initializeNotifications, NotificationService } from '../lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,6 +43,13 @@ function RootLayoutNav() {
       router.replace('/onboarding/step1');
     }
   }, [fontsLoaded, isLoading, isLoggedIn, profileLoading, profile]);
+
+  // Initialize notifications when user is logged in and onboarding is complete
+  useEffect(() => {
+    if (isLoggedIn && profile?.onboardingCompleted) {
+      initializeNotifications();
+    }
+  }, [isLoggedIn, profile?.onboardingCompleted]);
 
   if (!fontsLoaded || isLoading) return null;
 

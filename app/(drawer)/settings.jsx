@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useGlobalContext } from '../../context/GlobalProvider';
+import { updateProfile } from '../../lib/profile';
+import { REMINDER_FREQUENCIES } from '../../lib/notifications';
+import { account } from '../../lib/appwrite';
 
 const COLORS = {
   primary: '#04A777',
@@ -32,11 +36,56 @@ const SettingItem = ({ label, sublabel, type, value, onValueChange, onPress }) =
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { profile, refresh, user } = useGlobalContext();
   
   const [is2FAEnabled, set2FAEnabled] = useState(false);
   const [isDarkMode, setDarkMode] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
-  const reminderSchedule = 'Daily';
+  const [reminderSchedule, setReminderSchedule] = useState('Daily');
+
+  // Load notification preferences from profile and user prefs
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        // Load notification enabled from user preferences
+        if (user?.prefs) {
+          setPushNotifications(user.prefs.notificationsEnabled ?? true);
+        }
+        
+        // Load reminder frequency from profile
+        if (profile) {
+          setReminderSchedule(REMINDER_FREQUENCIES[profile.reminderFrequency]?.label || 'Daily');
+        }
+      } catch (error) {
+        console.log('Error loading notification preferences:', error);
+        // Set defaults
+        setPushNotifications(true);
+        setReminderSchedule('Daily');
+      }
+    };
+
+    loadPreferences();
+  }, [profile, user]);
+
+  const handleNotificationToggle = async (value) => {
+    try {
+      setPushNotifications(value);
+      
+      // Update user preferences instead of profile
+      const me = await account.get();
+      const prefs = {
+        ...me.prefs,
+        notificationsEnabled: value,
+      };
+      await account.updatePrefs(prefs);
+      
+      await refresh();
+    } catch (error) {
+      console.error('Error updating notification preference:', error);
+      // Revert the toggle if update failed
+      setPushNotifications(!value);
+    }
+  };
   
 
   return (
@@ -57,9 +106,9 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <SettingItem label="Light/Dark Mode" sublabel="Choose your preferred theme" type="toggle" value={isDarkMode} onValueChange={setDarkMode} />
           <View style={styles.divider} />
-          <SettingItem label="Push Notifications" sublabel="Receive notifications about your goals" type="toggle" value={pushNotifications} onValueChange={setPushNotifications} />
+          <SettingItem label="Push Notifications" sublabel="Receive notifications about your goals" type="toggle" value={pushNotifications} onValueChange={handleNotificationToggle} />
           <View style={styles.divider} />
-          <SettingItem label="Reminder Schedule" sublabel="Choose how often you want reminders" type="value" value={reminderSchedule} onPress={() => alert("Open Reminder Schedule options")} />
+          <SettingItem label="Reminder Schedule" sublabel="Choose how often you want reminders" type="value" value={reminderSchedule} onPress={() => router.push('/(drawer)/reminderschedule')} />
         </View>
 
         <Text style={styles.sectionHeader}>Danger Zone</Text>

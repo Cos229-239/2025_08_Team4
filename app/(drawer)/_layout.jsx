@@ -60,6 +60,12 @@ export default function DrawerLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="reminderschedule"
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen 
         name="about" 
         options={{ 
