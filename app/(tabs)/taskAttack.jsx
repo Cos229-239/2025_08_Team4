@@ -13,13 +13,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { listTasksUpToDuration } from "../../lib/taskRepo";
 
 const ACTIVE_STATUSES = ["todo", "in_progress", "paused"];
-const MAX_MINUTES = 60; // stop at 1 hour
+const MAX_MINUTES = 60;
 
 export default function TaskAttack() {
   const [minutes, setMinutes] = useState(null);
@@ -29,45 +29,34 @@ export default function TaskAttack() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  // --- NEW: simple click handlers you can connect to your repo later ---
   const handleTaskPress = (task) => {
-    console.log("Card pressed:", task.$id);
-    // e.g., navigate to details or expand the card
-    Alert.alert("Task", task.title || "(Untitled Task)");
-  };
-  const handleStart = (task) => {
-    console.log("Start pressed:", task.$id);
-    // TODO: await updateTaskStatus(task.$id, 'in_progress')
-  };
-  const handlePause = (task) => {
-    console.log("Pause pressed:", task.$id);
-    // TODO: await updateTaskStatus(task.$id, 'paused')
-  };
-  const handleDone = (task) => {
-    console.log("Done pressed:", task.$id);
-    // TODO: await updateTaskStatus(task.$id, 'done')
+    router.push({
+      // use "/(tabs)/viewTask" if your route is app/(tabs)/viewTask.jsx
+      pathname: "../ViewTask",
+      params: {
+        taskId: String(task.$id),
+        initialTask: JSON.stringify(task),
+      },
+    });
   };
 
-  // Build enum list from 10/15/30-minute increments (deduped) up to 60
   const minuteOptions = useMemo(() => {
     const s = new Set();
     for (let i = 10; i <= MAX_MINUTES; i += 10) s.add(i);
     for (let i = 15; i <= MAX_MINUTES; i += 15) s.add(i);
     for (let i = 30; i <= MAX_MINUTES; i += 30) s.add(i);
-    return Array.from(s).sort((a, b) => a - b); // -> [10,15,20,30,40,45,50,60]
+    return Array.from(s).sort((a, b) => a - b);
   }, []);
 
-  // Filter options by the dropdown's search box
   const filteredOptions = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return minuteOptions;
     if (q === "1h" || q === "60m" || q === "60") return [60];
-    const digits = q.replace(/\D/g, ""); // '30m' -> '30'
+    const digits = q.replace(/\D/g, "");
     if (!digits) return minuteOptions;
     return minuteOptions.filter((m) => String(m).includes(digits));
   }, [search, minuteOptions]);
 
-  // Auto-run when a duration is chosen
   useEffect(() => {
     const run = async () => {
       if (minutes == null) return;
@@ -75,7 +64,7 @@ export default function TaskAttack() {
       try {
         setLoading(true);
         const docs = await listTasksUpToDuration(minutes);
-        setTasks(docs);
+        setTasks(docs || []);
       } catch (e) {
         setError(e?.message || "Something went wrong fetching tasks.");
       } finally {
@@ -86,9 +75,10 @@ export default function TaskAttack() {
   }, [minutes]);
 
   const TaskCard = ({ item }) => {
-    const isDone = ["done", "completed"].includes(String(item.status || "").toLowerCase());
-    const canStart = !isDone && item.status !== "in_progress";
-    const canPause = !isDone && item.status === "in_progress";
+    const status = String(item.status || "").toLowerCase();
+    const isDone = status === "done" || status === "completed";
+    const mins =
+      Number.isFinite(item?.estimateMinutes) ? item.estimateMinutes : null;
 
     return (
       <Pressable
@@ -99,8 +89,9 @@ export default function TaskAttack() {
           pressed && { transform: [{ scale: 0.995 }] },
         ]}
       >
+        {/* Left badge with minutes */}
         <View style={styles.cardLeftIcon}>
-          <Ionicons name={isDone ? "checkmark-done-outline" : "flash-outline"} size={22} color="#2B8C7E" />
+          <Text style={styles.badgeText}>{mins != null ? `${mins}` : "—"}</Text>
         </View>
 
         <View style={{ flex: 1 }}>
@@ -113,55 +104,26 @@ export default function TaskAttack() {
             {item.priority != null ? `  •  P${item.priority}` : ""}
           </Text>
 
-          {item.notes ? <Text style={styles.cardNotes} numberOfLines={2}>{item.notes}</Text> : null}
-
-          <View style={styles.progressTrack}><View style={[styles.progressFill, { width: "0%" }]} /></View>
-          <Text style={styles.progressLabel}>0% Complete</Text>
-
-          {/* --- NEW: clickable actions row --- */}
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              onPress={() => handleStart(item)}
-              disabled={!canStart}
-              style={[styles.actionBtn, !canStart && styles.actionBtnDisabled]}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="play" size={16} color={canStart ? "#0F766E" : "#94A3B8"} />
-              <Text style={[styles.actionText, !canStart && styles.actionTextDisabled]}>Start</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => handlePause(item)}
-              disabled={!canPause}
-              style={[styles.actionBtn, !canPause && styles.actionBtnDisabled]}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="pause" size={16} color={canPause ? "#92400E" : "#94A3B8"} />
-              <Text style={[styles.actionText, !canPause && styles.actionTextDisabled]}>Pause</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => handleDone(item)}
-              style={styles.actionBtn}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="checkmark" size={16} color="#166534" />
-              <Text style={styles.actionText}>Done</Text>
-            </TouchableOpacity>
-          </View>
+          {item.notes ? (
+            <Text style={styles.cardNotes} numberOfLines={2}>
+              {item.notes}
+            </Text>
+          ) : null}
         </View>
       </Pressable>
     );
   };
 
-  /* --- Select (enum dropdown with search) --- */
   const Select = () => (
     <>
       <TouchableOpacity
         style={styles.selectTrigger}
-        onPress={() => { setSearch(""); setPickerOpen(true); }}
+        onPress={() => {
+          setSearch("");
+          setPickerOpen(true);
+        }}
         accessibilityRole="button"
-        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }} // easier to tap
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         activeOpacity={0.7}
       >
         <Ionicons name="time-outline" size={18} color="#6B7280" />
@@ -185,7 +147,10 @@ export default function TaskAttack() {
             <View style={styles.sheet}>
               <View style={styles.sheetHeader}>
                 <Text style={styles.sheetTitle}>Select Duration</Text>
-                <TouchableOpacity onPress={() => setPickerOpen(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <TouchableOpacity
+                  onPress={() => setPickerOpen(false)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
                   <Ionicons name="close" size={22} color="#6B7280" />
                 </TouchableOpacity>
               </View>
@@ -209,12 +174,27 @@ export default function TaskAttack() {
                   const selected = minutes === m;
                   return (
                     <TouchableOpacity
-                      style={[styles.optionRow, selected && styles.optionRowActive]}
-                      onPress={() => { setMinutes(m); setPickerOpen(false); }}
+                      style={[
+                        styles.optionRow,
+                        selected && styles.optionRowActive,
+                      ]}
+                      onPress={() => {
+                        setMinutes(m);
+                        setPickerOpen(false);
+                      }}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.optionText, selected && styles.optionTextActive]}>{m} minutes</Text>
-                      {selected && <Ionicons name="checkmark" size={18} color="#37C6AD" />}
+                      <Text
+                        style={[
+                          styles.optionText,
+                          selected && styles.optionTextActive,
+                        ]}
+                      >
+                        {m} minutes
+                      </Text>
+                      {selected && (
+                        <Ionicons name="checkmark" size={18} color="#37C6AD" />
+                      )}
                     </TouchableOpacity>
                   );
                 }}
@@ -240,15 +220,21 @@ export default function TaskAttack() {
       </View>
 
       <FlatList
-        data={tasks.filter((t) => ACTIVE_STATUSES.includes(String(t.status || "").toLowerCase()))}
-        keyExtractor={(item) => item.$id}
+        data={tasks.filter((t) =>
+          ACTIVE_STATUSES.includes(String(t.status || "").toLowerCase())
+        )}
+        keyExtractor={(item) => String(item.$id)}
         renderItem={({ item }) => <TaskCard item={item} />}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
-        keyboardShouldPersistTaps="handled"   // <--- ensure taps not swallowed
+        keyboardShouldPersistTaps="handled"
         ListEmptyComponent={
-          minutes == null
-            ? <Text style={styles.hint}>Select a time above to get started.</Text>
-            : !loading && <Text style={styles.empty}>No tasks estimated at {minutes} minutes.</Text>
+          minutes == null ? (
+            <Text style={styles.hint}>Select a time above to get started.</Text>
+          ) : !loading ? (
+            <Text style={styles.empty}>
+              No tasks estimated at {minutes} minutes.
+            </Text>
+          ) : null
         }
       />
     </SafeAreaView>
@@ -277,7 +263,11 @@ const styles = StyleSheet.create({
   selectText: { flex: 1, color: "#111827", fontWeight: "600" },
 
   /* modal sheet */
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.25)", justifyContent: "flex-end" },
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    justifyContent: "flex-end",
+  },
   sheetWrap: { width: "100%" },
   sheet: {
     backgroundColor: "#fff",
@@ -287,7 +277,12 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 16,
   },
-  sheetHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
+  sheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
   sheetTitle: { fontSize: 18, fontWeight: "800", color: "#111827" },
 
   searchRow: {
@@ -308,9 +303,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#FFFFFF",
   },
-  optionRowActive: {
-    backgroundColor: "#EAF8F5",
-  },
+  optionRowActive: { backgroundColor: "#EAF8F5" },
   optionText: { color: "#1F2937", fontWeight: "600" },
   optionTextActive: { color: "#1F2937" },
   optionSep: { height: 8 },
@@ -339,32 +332,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#DDF3EE",
   },
+  badgeText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#0F4C45",
+  },
   cardTitle: { fontSize: 16, fontWeight: "700", color: "#1F2937" },
   cardSub: { marginTop: 4, color: "#6B7280" },
   cardNotes: { marginTop: 6, color: "#6B7280" },
-  progressTrack: { height: 6, backgroundColor: "#EEF2F7", borderRadius: 999, marginTop: 10, overflow: "hidden" },
-  progressFill: { height: "100%", backgroundColor: "#E2E8F0", borderRadius: 999 },
-  progressLabel: { marginTop: 6, color: "#9CA3AF", fontSize: 12 },
-
-  /* NEW: actions row + buttons */
-  actionsRow: { flexDirection: "row", gap: 8, marginTop: 10 },
-  actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 10,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  actionBtnDisabled: {
-    backgroundColor: "#F3F4F6",
-    borderColor: "#E5E7EB",
-  },
-  actionText: { fontWeight: "700", color: "#111827" },
-  actionTextDisabled: { color: "#94A3B8" },
 
   error: { color: "#EF4444", marginTop: 6 },
   empty: { color: "#6B7280", marginTop: 16, textAlign: "center" },

@@ -164,6 +164,16 @@ export default function HomeScreen() {
              <Text style={styles.actionButtonText}>New Task</Text>
           </Pressable>
         </View>
+         <View style={[styles.actionsContainer, styles.actionsRowSpacer]}>
+          <Pressable style={styles.actionButton} onPress={() => router.push('/taskAttack')}>
+             <Ionicons name="flash-outline" size={28} color={COLORS.primary} />
+             <Text style={styles.actionButtonText}>Task Attack</Text>
+          </Pressable>
+          <Pressable style={styles.actionButton} onPress={() => router.push('/addtask-flow')}>
+             <Ionicons name="document-text-outline" size={28} color={COLORS.primary} />
+             <Text style={styles.actionButtonText}>New Task</Text>
+          </Pressable>
+        </View>
 
       </ScrollView>
     </SafeAreaView>
@@ -276,6 +286,9 @@ const styles = StyleSheet.create({
   actionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 8,
   },
   actionButton: {
     width: '48%',
@@ -292,4 +305,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.text,
   },
+  actionsRowSpacer: {
+  marginTop: 16,
+},
 });
