@@ -16,12 +16,34 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useFonts } from "@expo-google-fonts/oswald";
+import { OpenSans_700Bold, OpenSans_400Regular } from "@expo-google-fonts/open-sans";
+import { Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 import { listTasksUpToDuration } from "../../lib/taskRepo";
 
-const ACTIVE_STATUSES = ["todo", "in_progress", "paused"];
+const COLORS = {
+  primary: "#37C6AD",
+  accent: '#27AE60',       
+  primaryLight: "#E6F6F1",
+  background: "#F8F9FA",
+  card: "#FFFFFF",
+  text: "#212529",
+  textSecondary: "#6C757D",
+  border: "#EAEAEB",
+  muted: "#6B7280",
+  sheetInputBg: "#F3F4F6",
+};
+
+const ACTIVE_STATUSES = ["active", "todo", "in_progress", "paused"];
 const MAX_MINUTES = 60;
 
 export default function TaskAttack() {
+  const [fontsLoaded] = useFonts({
+    OpenSans_700Bold,
+    OpenSans_400Regular,
+    Pacifico_400Regular, // Pacifico title
+  });
+
   const [minutes, setMinutes] = useState(null);
   const [loading, setLoading] = useState(false);
   const [tasks, setTasks] = useState([]);
@@ -31,12 +53,8 @@ export default function TaskAttack() {
 
   const handleTaskPress = (task) => {
     router.push({
-      // use "/(tabs)/viewTask" if your route is app/(tabs)/viewTask.jsx
       pathname: "../ViewTask",
-      params: {
-        taskId: String(task.$id),
-        initialTask: JSON.stringify(task),
-      },
+      params: { taskId: String(task.$id), initialTask: JSON.stringify(task) },
     });
   };
 
@@ -75,21 +93,16 @@ export default function TaskAttack() {
   }, [minutes]);
 
   const TaskCard = ({ item }) => {
-    const status = String(item.status || "").toLowerCase();
-    const isDone = status === "done" || status === "completed";
-    const mins =
-      Number.isFinite(item?.estimateMinutes) ? item.estimateMinutes : null;
+    const mins = Number.isFinite(item?.estimateMinutes) ? item.estimateMinutes : null;
+    const due = item?.dueDate ? String(item.dueDate).split("T")[0] : null;
 
     return (
       <Pressable
         onPress={() => handleTaskPress(item)}
         android_ripple={{ color: "rgba(0,0,0,0.06)" }}
-        style={({ pressed }) => [
-          styles.card,
-          pressed && { transform: [{ scale: 0.995 }] },
-        ]}
+        style={({ pressed }) => [styles.card, pressed && { transform: [{ scale: 0.995 }] }]}
       >
-        {/* Left badge with minutes */}
+        {/* Badge with border */}
         <View style={styles.cardLeftIcon}>
           <Text style={styles.badgeText}>{mins != null ? `${mins}` : "—"}</Text>
         </View>
@@ -100,7 +113,7 @@ export default function TaskAttack() {
           </Text>
           <Text style={styles.cardSub} numberOfLines={1}>
             {`${item.estimateMinutes ?? "—"} min`}
-            {item.dueDate ? `  •  ${item.dueDate}` : ""}
+            {due ? `  •  ${due}` : ""}
             {item.priority != null ? `  •  P${item.priority}` : ""}
           </Text>
 
@@ -126,11 +139,11 @@ export default function TaskAttack() {
         hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
         activeOpacity={0.7}
       >
-        <Ionicons name="time-outline" size={18} color="#6B7280" />
+        <Ionicons name="time-outline" size={18} color={COLORS.muted} />
         <Text style={styles.selectText}>
           {minutes ? `${minutes} min` : "Select time…"}
         </Text>
-        <Ionicons name="chevron-down" size={18} color="#6B7280" />
+        <Ionicons name="chevron-down" size={18} color={COLORS.muted} />
       </TouchableOpacity>
 
       <Modal
@@ -151,17 +164,18 @@ export default function TaskAttack() {
                   onPress={() => setPickerOpen(false)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="close" size={22} color="#6B7280" />
+                  <Ionicons name="close" size={22} color={COLORS.muted} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.searchRow}>
-                <Ionicons name="search-outline" size={18} color="#6B7280" />
+                <Ionicons name="search-outline" size={18} color={COLORS.muted} />
                 <TextInput
                   style={styles.searchInput}
                   value={search}
                   onChangeText={setSearch}
                   placeholder="Search (e.g., 15, 30, 1h)"
+                  placeholderTextColor={COLORS.textSecondary}
                   keyboardType="default"
                   returnKeyType="done"
                 />
@@ -174,33 +188,26 @@ export default function TaskAttack() {
                   const selected = minutes === m;
                   return (
                     <TouchableOpacity
-                      style={[
-                        styles.optionRow,
-                        selected && styles.optionRowActive,
-                      ]}
+                      style={[styles.optionRow, selected && styles.optionRowActive]}
                       onPress={() => {
                         setMinutes(m);
                         setPickerOpen(false);
                       }}
                       activeOpacity={0.7}
                     >
-                      <Text
-                        style={[
-                          styles.optionText,
-                          selected && styles.optionTextActive,
-                        ]}
-                      >
+                      <Text style={[styles.optionText, selected && styles.optionTextActive]}>
                         {m} minutes
                       </Text>
                       {selected && (
-                        <Ionicons name="checkmark" size={18} color="#37C6AD" />
+                        <Ionicons name="checkmark" size={18} color={COLORS.primary} />
                       )}
                     </TouchableOpacity>
                   );
                 }}
                 keyboardShouldPersistTaps="handled"
                 ItemSeparatorComponent={() => <View style={styles.optionSep} />}
-                style={{ maxHeight: 280 }}
+                style={{ maxHeight: 300 }}
+                contentContainerStyle={{ paddingBottom: 8 }}
               />
             </View>
           </KeyboardAvoidingView>
@@ -209,20 +216,20 @@ export default function TaskAttack() {
     </>
   );
 
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerBlock}>
         <Text style={styles.h1}>Task Attack</Text>
         <Text style={styles.sub}>Spend your time to spare show you care!</Text>
         <Select />
-        {loading && <ActivityIndicator size="large" style={{ marginTop: 6 }} />}
+        {loading && <ActivityIndicator size="large" style={{ marginTop: 10 }} color={COLORS.primary} />}
         {!!error && <Text style={styles.error}>{error}</Text>}
       </View>
 
       <FlatList
-        data={tasks.filter((t) =>
-          ACTIVE_STATUSES.includes(String(t.status || "").toLowerCase())
-        )}
+        data={tasks.filter((t) => ACTIVE_STATUSES.includes(String(t.status || "").toLowerCase()))}
         keyExtractor={(item) => String(item.$id)}
         renderItem={({ item }) => <TaskCard item={item} />}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
@@ -231,9 +238,7 @@ export default function TaskAttack() {
           minutes == null ? (
             <Text style={styles.hint}>Select a time above to get started.</Text>
           ) : !loading ? (
-            <Text style={styles.empty}>
-              No tasks estimated at {minutes} minutes.
-            </Text>
+            <Text style={styles.empty}>No tasks estimated at {minutes} minutes.</Text>
           ) : null
         }
       />
@@ -243,15 +248,26 @@ export default function TaskAttack() {
 
 const styles = StyleSheet.create({
   /* page */
-  container: { flex: 1, backgroundColor: "#F0F4F8" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   headerBlock: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 },
-  h1: { fontSize: 28, fontWeight: "800", color: "#1E1E1E", marginBottom: 4 },
-  sub: { color: "#6B7280", marginBottom: 8 },
+
+  // Pacifico title in mint
+  h1: {
+    fontSize: 40,
+    color: COLORS.accent,
+    marginBottom: 2,
+    fontFamily: "Pacifico_400Regular",
+  },
+  sub: {
+    color: COLORS.textSecondary,
+    marginBottom: 12,
+    fontFamily: "OpenSans_400Regular",
+  },
 
   /* select trigger */
   selectTrigger: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E5E7EB",
+    backgroundColor: COLORS.card,
+    borderColor: COLORS.border,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -260,7 +276,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  selectText: { flex: 1, color: "#111827", fontWeight: "600" },
+  selectText: {
+    flex: 1,
+    color: COLORS.text,
+    fontFamily: "OpenSans_700Bold",
+  },
 
   /* modal sheet */
   backdrop: {
@@ -270,78 +290,97 @@ const styles = StyleSheet.create({
   },
   sheetWrap: { width: "100%" },
   sheet: {
-    backgroundColor: "#fff",
+    backgroundColor: COLORS.card,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 16,
+    borderTopWidth: 1,
+    borderColor: COLORS.border,
   },
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  sheetTitle: { fontSize: 18, fontWeight: "800", color: "#111827" },
+  sheetTitle: {
+    fontSize: 18,
+    color: COLORS.text,
+    fontFamily: "OpenSans_700Bold",
+  },
 
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: COLORS.sheetInputBg,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
-    marginBottom: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  searchInput: { flex: 1, color: "#111827" },
+  searchInput: {
+    flex: 1,
+    color: COLORS.text,
+    fontFamily: "OpenSans_400Regular",
+  },
 
   optionRow: {
     paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: COLORS.card,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  optionRowActive: { backgroundColor: "#EAF8F5" },
-  optionText: { color: "#1F2937", fontWeight: "600" },
-  optionTextActive: { color: "#1F2937" },
-  optionSep: { height: 8 },
+  optionRowActive: { backgroundColor: COLORS.primaryLight, borderColor: "#D0F0E7" },
+  optionText: { color: COLORS.text, fontFamily: "OpenSans_700Bold" },
+  optionTextActive: { color: COLORS.text },
+  optionSep: { height: 10 },
 
   /* cards */
   card: {
     flexDirection: "row",
     gap: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.card,
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: "#E9EEF5",
+    borderColor: COLORS.border,
     shadowColor: "#000",
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
+
+  // Badge with visible border
   cardLeftIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#DDF3EE",
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 2,                 // <— border added
+    borderColor: COLORS.primary,    // <— mint border
   },
   badgeText: {
     fontSize: 16,
-    fontWeight: "800",
-    color: "#0F4C45",
+    color: COLORS.primary,
+    fontFamily: "OpenSans_700Bold",
   },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: "#1F2937" },
-  cardSub: { marginTop: 4, color: "#6B7280" },
-  cardNotes: { marginTop: 6, color: "#6B7280" },
 
-  error: { color: "#EF4444", marginTop: 6 },
-  empty: { color: "#6B7280", marginTop: 16, textAlign: "center" },
-  hint: { color: "#9CA3AF", marginTop: 16, textAlign: "center" },
+  cardTitle: { fontSize: 16, color: COLORS.text, fontFamily: "OpenSans_700Bold" },
+  cardSub: { marginTop: 4, color: COLORS.textSecondary, fontFamily: "OpenSans_400Regular" },
+  cardNotes: { marginTop: 6, color: COLORS.textSecondary, fontFamily: "OpenSans_400Regular" },
+
+  error: { color: "#EF4444", marginTop: 10, fontFamily: "OpenSans_700Bold" },
+  empty: { color: COLORS.textSecondary, marginTop: 16, textAlign: "center", fontFamily: "OpenSans_400Regular" },
+  hint: { color: "#9CA3AF", marginTop: 16, textAlign: "center", fontFamily: "OpenSans_400Regular" },
 });
