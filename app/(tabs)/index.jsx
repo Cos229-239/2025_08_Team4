@@ -97,36 +97,74 @@ const COLORS = {
   border: '#E9ECEF',
 };
 
-const ManagementButton = ({ title, iconName, onPress }) => (
-  <Pressable style={styles.gridItem} onPress={onPress} accessibilityRole='button'>
-    <Ionicons name={iconName} size={32} color="#3177C9" />
-    <Text style={styles.gridText}>{title}</Text>
+const UpcomingTaskItem = ({ goalName, taskTitle, dueDateText, onPress }) => (
+  <Pressable style={styles.taskItem} onPress={onPress}>
+    <View style={styles.taskIcon}>
+      <Ionicons name="radio-button-off-outline" size={24} color={COLORS.primary} />
+    </View>
+    <View style={styles.taskItemTextContainer}>
+      <Text style={styles.taskItemGoalName} numberOfLines={1}>{goalName}</Text>
+      <Text style={styles.taskItemTitle} numberOfLines={1}>{taskTitle}</Text>
+    </View>
+    <Text style={styles.taskItemDueDate}>{dueDateText}</Text>
+    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
   </Pressable>
 );
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [fontsLoaded] = useFonts({
-    Oswald_600SemiBold,
-    OpenSans_700Bold,
-  });
+  const [tasks, setTasks] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  // NEW: Select a random quote on component load
+  const dailyQuote = useMemo(() => QUOTES[Math.floor(Math.random() * QUOTES.length)], []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [fetchedTasks, fetchedGoals, fetchedProfile] = await Promise.all([
+          listMyTasks(),
+          listMyGoals(),
+          getOrCreateProfile(),
+        ]);
+        setTasks(fetchedTasks);
+        setGoals(fetchedGoals);
+        setProfile(fetchedProfile);
+      } catch (error) {
+        console.error("Failed to fetch home screen data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const upcomingTasksWithGoals = useMemo(() => {
+    if (!tasks.length || !goals.length) return [];
+    const goalMap = new Map(goals.map(goal => [goal.$id, goal.title]));
+    return tasks
+      .filter(task => task.status !== 'Completed' && isUpcoming(task.dueDate))
+      .map(task => ({
+        ...task,
+        goalName: goalMap.get(task.goalId) || 'General Task',
+      }))
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 5);
+  }, [tasks, goals]);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.section}>
-          <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.sectionTitle}>Daily Stand Up</Text>
-            <Ionicons name="filter-outline" size={24} color="#666" />
-          </View>
-          <View style={styles.card}>
-            {dailyTasks.map((task) => (
-              <TaskItem key={task.id} item={task} />
-            ))}
+        
+        {/* --- NEW: Redesigned Header Section --- */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.greetingTitle}>Hello, {profile?.name || 'User'}!</Text>
+          <View style={styles.quoteContainer}>
+            <Text style={styles.quoteText}>"{dailyQuote.quote}"</Text>
+            <Text style={styles.quoteAuthor}>- {dailyQuote.author}</Text>
           </View>
         </View>
 
@@ -174,23 +212,44 @@ export default function HomeScreen() {
              <Text style={styles.actionButtonText}>New Project</Text>
           </Pressable>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F0F4F8',
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { paddingHorizontal: 16, paddingVertical: 24, },
+  // NEW and UPDATED Styles for the header
+  headerContainer: {
+    padding: 20,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 16,
+    marginBottom: 32,
   },
-  scrollContent: {
-    padding: 16,
+  greetingTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.text,
   },
-  section: {
-    marginBottom: 24,
+  quoteContainer: {
+    marginTop: 12,
   },
-  sectionHeaderContainer: {
+  quoteText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    fontStyle: 'italic',
+  },
+  quoteAuthor: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  // ------------------------------------
+  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -198,68 +257,87 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   sectionTitle: {
-    fontFamily: 'Oswald_600SemiBold',
-    fontSize: 22,
-    color: '#333',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
-    overflow: 'hidden', 
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
   },
   taskItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F4F8', 
+    padding: 16,
   },
-  taskTitleText: {
+  taskIcon: {
+    backgroundColor: 'white', // Changed from primaryLight for better contrast
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  taskItemTextContainer: {
     flex: 1,
-    fontFamily: 'OpenSans_700Bold',
     marginLeft: 12,
+  },
+  taskItemGoalName: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+  },
+  taskItemTitle: {
     fontSize: 16,
-    color: '#333',
+    fontWeight: '500',
+    color: COLORS.text,
   },
-  taskDueDate: {
-    fontFamily: 'OpenSans_700Bold',
+  taskItemDueDate: {
     fontSize: 14,
-    color: '#888',
-    marginRight: 8,
+    color: COLORS.textSecondary,
+    marginLeft: 8,
   },
-  gridContainer: {
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.border,
+    marginLeft: 68,
+  },
+  emptyState: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  actionsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
     alignItems: "center",
     gap: 12,
     paddingHorizontal: 8,
   },
-  gridItem: {
-    width: '48%', 
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
+  actionButton: {
+    width: '48%',
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
     padding: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 15,
-    aspectRatio: 1, 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  gridText: {
-    fontFamily: 'Oswald_600SemiBold',
-    fontSize: 18,
-    color: '#3177C9',
+  actionButtonText: {
     marginTop: 10,
     fontSize: 16,
     fontWeight: '600',
