@@ -1,7 +1,9 @@
+// app/addgoal-flow.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TextInput, TouchableOpacity,
-  FlatList, Dimensions, Pressable, Alert, Modal, KeyboardAvoidingView, Platform
+  FlatList, Dimensions, Pressable, Alert, Modal, KeyboardAvoidingView,
+  Platform, Keyboard
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useFonts, Oswald_600SemiBold } from '@expo-google-fonts/oswald';
@@ -9,6 +11,7 @@ import { OpenSans_700Bold, OpenSans_400Regular } from '@expo-google-fonts/open-s
 import SnowyMountain from '../components/SnowyMountain';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import RNPickerSelect from 'react-native-picker-select';
+import { Ionicons } from '@expo/vector-icons';
 
 import { upsertGoal } from '../lib/goalRepo';
 import { listMyProjects, createProject, PROJECT_TYPE_ENUM } from '../lib/projectRepo';
@@ -30,6 +33,8 @@ const ProgressIndicator = ({ currentStep, totalSteps }) => (
     ))}
   </View>
 );
+
+/* ---------------- Steps ---------------- */
 
 const Step1 = ({ priority, setPriority, goalName, setGoalName }) => (
   <>
@@ -84,7 +89,7 @@ const Step2 = ({ why, setWhy, gain, setGain, success, setSuccess }) => (
   </>
 );
 
-// Step3: Notes + Project (picker with “Create Project” modal)
+// Step3: Notes + Project (RNPickerSelect) + "Create Project" modal trigger
 const Step3 = ({
   notes, setNotes,
   project, setProject,
@@ -112,7 +117,7 @@ const Step3 = ({
         ...projectItems,
         { label: '➕ New Project…', value: '__create__' },
       ]}
-      placeholder={{}} // no placeholder row; shows current value
+      placeholder={{}} // show current value without placeholder row
       useNativeAndroidPickerStyle={false}
       style={pickerSelectStyles}
       Icon={() => <Text style={{ position: 'absolute', right: 0, top: 0, bottom: 0 }}>▾</Text>}
@@ -131,20 +136,79 @@ const Step4 = ({ targetDate, onSelectDate }) => (
   </>
 );
 
-const Step5 = ({ selectedValue, onValueChange, items }) => (
-  <>
-    <Text style={styles.label}>Review cadence</Text>
-    <RNPickerSelect
-      onValueChange={onValueChange}
-      items={items}
-      style={pickerSelectStyles}
-      placeholder={{ label: 'Select a review cadence...', value: null }}
-      value={selectedValue}
-      useNativeAndroidPickerStyle={false}
-      Icon={() => <Text style={{ position: 'absolute', right: 0, top: 0, bottom: 0 }}>▾</Text>}
-    />
-  </>
-);
+// Step5: Review cadence (custom bottom sheet so it works on iOS reliably)
+const CADENCE_LABELS = { DAILY: 'Daily', WEEKLY: 'Weekly', MONTHLY: 'Monthly' };
+const Step5 = ({ selectedValue, onValueChange, items }) => {
+  const [open, setOpen] = useState(false);
+  const currentLabel =
+    CADENCE_LABELS[selectedValue] ||
+    (items.find(i => i.value === selectedValue)?.label ?? 'Select a review cadence…');
+
+  return (
+    <>
+      <Text style={styles.label}>Review cadence</Text>
+
+      {/* Trigger */}
+      <TouchableOpacity
+        style={styles.selectTrigger}
+        onPress={() => setOpen(true)}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+      >
+        <Ionicons name="repeat-outline" size={18} color="#6B7280" />
+        <Text style={styles.selectText}>{currentLabel}</Text>
+        <Ionicons name="chevron-down" size={18} color="#6B7280" />
+      </TouchableOpacity>
+
+      {/* Bottom sheet modal */}
+      <Modal
+        visible={open}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpen(false)}
+      >
+        <View style={styles.backdrop}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.sheetWrap}
+          >
+            <View style={styles.sheet}>
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>Select cadence</Text>
+                <TouchableOpacity onPress={() => setOpen(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name="close" size={22} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+
+              {items.map(opt => {
+                const selected = selectedValue === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.optionRow, selected && styles.optionRowActive]}
+                    onPress={() => {
+                      onValueChange(opt.value);
+                      setOpen(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.optionText, selected && styles.optionTextActive]}>
+                      {opt.label}
+                    </Text>
+                    {selected && <Ionicons name="checkmark" size={18} color="#04A777" />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+    </>
+  );
+};
+
+/* ---------------- Screen ---------------- */
 
 export default function AddGoalFlowScreen() {
   const router = useRouter();
@@ -265,7 +329,15 @@ export default function AddGoalFlowScreen() {
   };
   const isCurrentStepComplete = isStepComplete(currentStep);
 
-  const showDatePicker = () => setDatePickerVisibility(true);
+  // iOS date picker: readable text + safe presentation
+  const iosVersion = Platform.OS === 'ios' ? parseInt(String(Platform.Version), 10) || 0 : 0;
+  const iosInlineSupported = Platform.OS === 'ios' && iosVersion >= 14;
+  const dateDisplay = Platform.OS === 'ios' ? (iosInlineSupported ? 'inline' : 'spinner') : 'default';
+
+  const showDatePicker = () => {
+    Keyboard.dismiss();
+    setDatePickerVisibility(true);
+  };
   const hideDatePicker = () => setDatePickerVisibility(false);
   const handleConfirmDate = (date) => {
     setTargetDate(date.toISOString().split('T')[0]);
@@ -322,9 +394,7 @@ export default function AddGoalFlowScreen() {
         notes,
         targetDate,
         reviewCadence,
-        status: 'active',           // ✅ default Active
-
-        // mirror id + relation (single)
+        status: 'active', // default Active
         projectId: selectedProjectId,
         project: selectedProjectId,
       };
@@ -390,12 +460,24 @@ export default function AddGoalFlowScreen() {
         </View>
       </View>
 
-      {/* Date picker */}
+      {/* Date picker — iOS readable */}
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
+        display={dateDisplay}
         onConfirm={handleConfirmDate}
         onCancel={hideDatePicker}
+        // Force readable/light theme on iOS
+        isDarkModeEnabled={false}
+        pickerProps={Platform.OS === 'ios' ? { themeVariant: 'light' } : {}}
+        headerTextIOS="Pick a date"
+        buttonTextColorIOS="#04A777"
+        // make sure the sheet/background stay bright for contrast
+        pickerContainerStyleIOS={styles.iosPickerContainer}
+        pickerStyleIOS={styles.iosPicker}
+        contentContainerStyleIOS={styles.iosPickerContent}
+        backdropStyleIOS={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
+        modalPropsIOS={{ presentationStyle: 'overFullScreen' }}
       />
 
       {/* Create Project Modal */}
@@ -529,7 +611,68 @@ const styles = StyleSheet.create({
   },
   dateText: { fontSize: 16, fontFamily: 'OpenSans_400Regular', color: '#5E5E6C' },
 
-  // modal
+  // cadence bottom sheet
+  selectTrigger: {
+    backgroundColor: '#F8F8F8',
+    borderColor: '#EAEAEB',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
+  selectText: {
+    flex: 1,
+    color: '#222223',
+    fontFamily: 'OpenSans_700Bold',
+  },
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    justifyContent: 'flex-end',
+  },
+  sheetWrap: { width: '100%' },
+  sheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderTopWidth: 1,
+    borderColor: '#EAEAEB',
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  sheetTitle: {
+    fontSize: 18,
+    color: '#222223',
+    fontFamily: 'OpenSans_700Bold',
+  },
+  optionRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EAEAEB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  optionRowActive: { backgroundColor: '#E6F6F1', borderColor: '#D0F0E7' },
+  optionText: { color: '#222223', fontFamily: 'OpenSans_700Bold' },
+  optionTextActive: { color: '#222223' },
+
+  // modal for project
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.35)',
@@ -543,6 +686,17 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontFamily: 'Oswald_600SemiBold', fontSize: 22, color: '#222223', marginBottom: 12 },
   modalLabel: { fontFamily: 'Oswald_600SemiBold', fontSize: 16, color: '#222223', marginBottom: 8, marginTop: 6 },
+
+  // iOS picker container styling (readable)
+  iosPickerContainer: {
+    backgroundColor: '#FFFFFF',
+  },
+  iosPickerContent: {
+    backgroundColor: '#FFFFFF',
+  },
+  iosPicker: {
+    backgroundColor: '#FFFFFF',
+  },
 });
 
 const pickerSelectStyles = StyleSheet.create({
