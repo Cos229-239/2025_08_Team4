@@ -62,6 +62,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="profile" options={{ headerShown: false }} />
+      <Stack.Screen name="addProject" options={{ headerShown: false }} />
     </Stack>
   );
 }

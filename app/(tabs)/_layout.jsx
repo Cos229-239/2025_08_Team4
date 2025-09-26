@@ -58,6 +58,10 @@ export default function TabsLayout() {
           options={{ href: null, headerShown: false }}
         />
         <Tabs.Screen
+          name="taskAttack"
+          options={{ href: null, headerShown: false }}
+        />
+        <Tabs.Screen
           name="menu"
           options={{
             tabBarLabel: "Menu",

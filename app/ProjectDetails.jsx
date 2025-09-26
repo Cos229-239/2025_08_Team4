@@ -5,7 +5,11 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Checkbox from 'expo-checkbox';
 import SnowyMountain from '../components/SnowyMountain'; 
+
+
 // CORRECTED: Path to repository files
+
+
 import { listMyTasks, upsertTask } from '../lib/taskRepo'; 
 
 const COLORS = { 
@@ -79,6 +83,18 @@ export default function ProjectDetailsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState('Goals');
 
+  
+  const openGoal = React.useCallback((goal) => {
+    router.push({
+      pathname: '/ViewGoal', // <-- must match your file in app/, e.g. /ViewGoalScreen if that's the filename
+      params: {
+        goalId: String(goal.$id),
+        initialGoal: JSON.stringify(goal), // lets the detail page render instantly
+      },
+    });
+  }, [router]);
+
+
   useEffect(() => {
     const fetchTasks = async () => {
       if (!projectGoals.length) {
@@ -146,7 +162,7 @@ export default function ProjectDetailsScreen() {
         {isLoading ? <ActivityIndicator size="large" color={COLORS.primary} /> : (
             <>
                 {viewMode === 'Goals' && projectGoals.map(goal => (
-                    <GoalItem key={goal.$id} goal={goal} onPress={() => router.push(`/ViewGoalScreen?goalId=${goal.$id}`)} />
+                    <GoalItem key={goal.$id} goal={goal} onPress={() => openGoal(goal)} />
                 ))}
 
                 {viewMode === 'Tasks' && projectTasks.map(task => (
