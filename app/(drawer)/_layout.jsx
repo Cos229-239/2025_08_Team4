@@ -66,6 +66,12 @@ export default function DrawerLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="test-notifications"
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen 
         name="about" 
         options={{ 

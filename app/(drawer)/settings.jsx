@@ -109,6 +109,8 @@ export default function SettingsScreen() {
           <SettingItem label="Push Notifications" sublabel="Receive notifications about your goals" type="toggle" value={pushNotifications} onValueChange={handleNotificationToggle} />
           <View style={styles.divider} />
           <SettingItem label="Reminder Schedule" sublabel="Choose how often you want reminders" type="value" value={reminderSchedule} onPress={() => router.push('/(drawer)/reminderschedule')} />
+          <View style={styles.divider} />
+          <SettingItem label="Test Notifications" sublabel="Test notification functionality" type="navigation" onPress={() => router.push('/(drawer)/test-notifications')} />
         </View>
 
         <Text style={styles.sectionHeader}>Danger Zone</Text>
