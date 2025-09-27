@@ -6,6 +6,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { listMyTasks } from '../../lib/taskRepo';
 import { listMyGoals } from '../../lib/goalRepo';
 import { getOrCreateProfile } from '../../lib/profile';
+import { useTheme } from '../../context/ThemeContext';
 
 
 const QUOTES = [
@@ -87,32 +88,25 @@ const formatDueDate = (dateString) => {
   return 'Overdue';
 };
 
-const COLORS = { 
-  primary: '#04A777', 
-  primaryLight: '#E6F6F1',
-  background: '#F8F9FA', 
-  card: '#FFFFFF', 
-  text: '#212529', 
-  textSecondary: '#6C757D', 
-  border: '#E9ECEF',
-};
+// Colors are now provided by the theme context
 
-const UpcomingTaskItem = ({ goalName, taskTitle, dueDateText, onPress }) => (
-  <Pressable style={styles.taskItem} onPress={onPress}>
+const UpcomingTaskItem = ({ goalName, taskTitle, dueDateText, onPress, colors }) => (
+  <Pressable style={[styles.taskItem, { backgroundColor: colors.card }]} onPress={onPress}>
     <View style={styles.taskIcon}>
-      <Ionicons name="radio-button-off-outline" size={24} color={COLORS.primary} />
+      <Ionicons name="radio-button-off-outline" size={24} color={colors.primary} />
     </View>
     <View style={styles.taskItemTextContainer}>
-      <Text style={styles.taskItemGoalName} numberOfLines={1}>{goalName}</Text>
-      <Text style={styles.taskItemTitle} numberOfLines={1}>{taskTitle}</Text>
+      <Text style={[styles.taskItemGoalName, { color: colors.textSecondary }]} numberOfLines={1}>{goalName}</Text>
+      <Text style={[styles.taskItemTitle, { color: colors.text }]} numberOfLines={1}>{taskTitle}</Text>
     </View>
-    <Text style={styles.taskItemDueDate}>{dueDateText}</Text>
-    <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />
+    <Text style={[styles.taskItemDueDate, { color: colors.textSecondary }]}>{dueDateText}</Text>
+    <Ionicons name="chevron-forward-outline" size={22} color={colors.textSecondary} />
   </Pressable>
 );
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [tasks, setTasks] = useState([]);
   const [goals, setGoals] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -156,29 +150,29 @@ export default function HomeScreen() {
   }, [tasks, goals]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
         {/* --- NEW: Redesigned Header Section --- */}
-        <View style={styles.headerContainer}>
-          <Text style={styles.greetingTitle}>Hello, {profile?.name || 'User'}!</Text>
+        <View style={[styles.headerContainer, { backgroundColor: colors.primaryLight }]}>
+          <Text style={[styles.greetingTitle, { color: colors.text }]}>Hello, {profile?.name || 'User'}!</Text>
           <View style={styles.quoteContainer}>
-            <Text style={styles.quoteText}>"{dailyQuote.quote}"</Text>
-            <Text style={styles.quoteAuthor}>- {dailyQuote.author}</Text>
+            <Text style={[styles.quoteText, { color: colors.text }]}>"{dailyQuote.quote}"</Text>
+            <Text style={[styles.quoteAuthor, { color: colors.textSecondary }]}>- {dailyQuote.author}</Text>
           </View>
         </View>
 
         {/* --- Daily Stand Up Section --- */}
         <View style={styles.sectionHeader}>
           {/* UPDATED: Title changed */}
-          <Text style={styles.sectionTitle}>Daily Standup</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Daily Standup</Text>
           <Pressable onPress={() => router.push('/dailystandup')}>
-             <Text style={styles.viewAllText}>View All</Text>
+             <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
           </Pressable>
         </View>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {isLoading ? (
-            <ActivityIndicator style={{ padding: 20 }} size="small" color={COLORS.primary} />
+            <ActivityIndicator style={{ padding: 20 }} size="small" color={colors.primary} />
           ) : upcomingTasksWithGoals.length > 0 ? (
             upcomingTasksWithGoals.map((task, index) => (
               <React.Fragment key={task.$id}>
@@ -187,29 +181,30 @@ export default function HomeScreen() {
                   taskTitle={task.title}
                   dueDateText={formatDueDate(task.dueDate)}
                   onPress={() => router.push(`/ViewTask?taskId=${task.$id}`)}
+                  colors={colors}
                 />
-                {index < upcomingTasksWithGoals.length - 1 && <View style={styles.divider} />}
+                {index < upcomingTasksWithGoals.length - 1 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
               </React.Fragment>
             ))
           ) : (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No upcoming tasks. Enjoy the clear path!</Text>
+              <Text style={[styles.emptyStateText, { color: colors.textSecondary }]}>No upcoming tasks. Enjoy the clear path!</Text>
             </View>
           )}
         </View>
 
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
         </View>
         <View style={styles.actionsContainer}>
-          <Pressable style={styles.actionButton} onPress={() => router.push('/taskAttack')}>
-             <MaterialCommunityIcons name="target-variant" size={28} color={COLORS.primary} />
-             <Text style={styles.actionButtonText}>Task Attack</Text>
+          <Pressable style={[styles.actionButton, { backgroundColor: colors.card }]} onPress={() => router.push('/taskAttack')}>
+             <MaterialCommunityIcons name="target-variant" size={28} color={colors.primary} />
+             <Text style={[styles.actionButtonText, { color: colors.text }]}>Task Attack</Text>
           </Pressable>
-          <Pressable style={styles.actionButton} onPress={() => router.push('../addProject')}>
-             <MaterialCommunityIcons name="folder-plus-outline" size={28} color={COLORS.primary} />
-             <Text style={styles.actionButtonText}>New Project</Text>
+          <Pressable style={[styles.actionButton, { backgroundColor: colors.card }]} onPress={() => router.push('../addProject')}>
+             <MaterialCommunityIcons name="folder-plus-outline" size={28} color={colors.primary} />
+             <Text style={[styles.actionButtonText, { color: colors.text }]}>New Project</Text>
           </Pressable>
         </View>
 
@@ -219,32 +214,28 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingVertical: 24, },
   // NEW and UPDATED Styles for the header
   headerContainer: {
     padding: 20,
-    backgroundColor: COLORS.primaryLight,
     borderRadius: 16,
     marginBottom: 32,
   },
   greetingTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
   quoteContainer: {
     marginTop: 12,
   },
   quoteText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     fontStyle: 'italic',
   },
   quoteAuthor: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textSecondary,
     textAlign: 'right',
     marginTop: 4,
   },
@@ -259,19 +250,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
   viewAllText: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.primary,
   },
   card: {
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     marginBottom: 32,
     borderWidth: 1,
-    borderColor: COLORS.border,
     overflow: 'hidden',
   },
   taskItem: {
@@ -287,7 +274,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   taskItemTextContainer: {
     flex: 1,
@@ -295,21 +281,17 @@ const styles = StyleSheet.create({
   },
   taskItemGoalName: {
     fontSize: 12,
-    color: COLORS.textSecondary,
   },
   taskItemTitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: COLORS.text,
   },
   taskItemDueDate: {
     fontSize: 14,
-    color: COLORS.textSecondary,
     marginLeft: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.border,
     marginLeft: 68,
   },
   emptyState: {
@@ -318,7 +300,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: COLORS.textSecondary,
     textAlign: 'center',
   },
   actionsContainer: {
@@ -330,18 +311,15 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     width: '48%',
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   actionButtonText: {
     marginTop: 10,
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.text,
   },
   actionsRowSpacer: {  //add this style to and quick action buttons added belowe the top row
   marginTop: 16,

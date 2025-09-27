@@ -20,6 +20,7 @@ import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { useTheme } from '../../context/ThemeContext';
 import { account } from '../../lib/appwrite';
 import { updateProfile, BARRIER_LABEL_TO_CODE } from '../../lib/profile';
 
@@ -27,6 +28,7 @@ import { updateProfile, BARRIER_LABEL_TO_CODE } from '../../lib/profile';
 export default function EditProfileScreen() {
   const router = useRouter();
   const { user, profile, refresh } = useGlobalContext();
+  const { colors } = useTheme();
   const [fontsLoaded, fontError] = useFonts({
     Pacifico_400Regular,
     Oswald_600SemiBold,
@@ -279,9 +281,9 @@ const [reminderValue, setReminderValue] = useState(null);
   if (fontError) {
     console.error('Font loading error:', fontError);
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Font loading error. Please restart the app.</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.danger }]}>Font loading error. Please restart the app.</Text>
+        <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary }]} onPress={() => router.back()}>
           <Text style={styles.retryButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -291,16 +293,16 @@ const [reminderValue, setReminderValue] = useState(null);
   // Show loading screen while fonts are loading
   if (!fontsLoaded) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#04A777" />
-        <Text style={styles.loadingText}>Loading fonts...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading fonts...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="white" />
         </TouchableOpacity>
@@ -324,19 +326,19 @@ const [reminderValue, setReminderValue] = useState(null);
           keyboardDismissMode="on-drag"
           scrollEventThrottle={16}
         >
-          <View style={styles.formContainer}>
-            <Text style={styles.pageSubtitle}>Update your personal information and preferences</Text>
+          <View style={[styles.formContainer, { backgroundColor: colors.card }]}>
+            <Text style={[styles.pageSubtitle, { color: colors.textSecondary }]}>Update your personal information and preferences</Text>
               
-              <Text style={styles.sectionTitle}>Personal Information</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Information</Text>
                 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Name</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Name</Text>
                                   <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
                   placeholder="Enter your full name"
                   value={name}
                   onChangeText={setName}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.textSecondary}
                   returnKeyType="next"
                   blurOnSubmit={false}
                   autoCorrect={false}
@@ -345,15 +347,15 @@ const [reminderValue, setReminderValue] = useState(null);
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Email Address</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Email Address</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
                     placeholder="Enter your email"
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    placeholderTextColor="#9CA3AF"
+                    placeholderTextColor={colors.textSecondary}
                     returnKeyType="next"
                     blurOnSubmit={false}
                     autoCorrect={false}
@@ -363,16 +365,16 @@ const [reminderValue, setReminderValue] = useState(null);
 
                 {/* Show email change info when email is being changed */}
                 {email !== user?.email && (
-                  <View style={styles.emailChangeContainer}>
-                    <Text style={styles.emailChangeTitle}>Email Change Confirmation</Text>
+                  <View style={[styles.emailChangeContainer, { backgroundColor: colors.background, borderLeftColor: colors.primary }]}>
+                    <Text style={[styles.emailChangeTitle, { color: colors.text }]}>Email Change Confirmation</Text>
                     <View style={styles.emailDisplayColumn}>
                       <View style={styles.emailDisplayItem}>
-                        <Text style={styles.emailDisplayLabel}>Current Email:</Text>
-                        <Text style={styles.emailDisplayValue}>{user?.email || 'Not set'}</Text>
+                        <Text style={[styles.emailDisplayLabel, { color: colors.textSecondary }]}>Current Email:</Text>
+                        <Text style={[styles.emailDisplayValue, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}>{user?.email || 'Not set'}</Text>
                       </View>
                       <View style={styles.emailDisplayItem}>
-                        <Text style={styles.emailDisplayLabel}>New Email:</Text>
-                        <Text style={styles.emailDisplayValue}>{email}</Text>
+                        <Text style={[styles.emailDisplayLabel, { color: colors.textSecondary }]}>New Email:</Text>
+                        <Text style={[styles.emailDisplayValue, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}>{email}</Text>
                       </View>
                     </View>
                   </View>
@@ -380,15 +382,15 @@ const [reminderValue, setReminderValue] = useState(null);
 
                 {email !== user?.email && (
                   <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Current Password (required for email change)</Text>
-                    <View style={styles.passwordInputContainer}>
+                    <Text style={[styles.label, { color: colors.text }]}>Current Password (required for email change)</Text>
+                    <View style={[styles.passwordInputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
                       <TextInput
-                        style={styles.passwordInput}
+                        style={[styles.passwordInput, { color: colors.text }]}
                         placeholder="Enter your current password"
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry={!showPassword}
-                        placeholderTextColor="#9CA3AF"
+                        placeholderTextColor={colors.textSecondary}
                         returnKeyType="done"
                         blurOnSubmit={true}
                         autoCorrect={false}
@@ -401,18 +403,18 @@ const [reminderValue, setReminderValue] = useState(null);
                         <Ionicons 
                           name={showPassword ? "eye-off" : "eye"} 
                           size={20} 
-                          color="#04A777" 
+                          color={colors.primary} 
                         />
                       </TouchableOpacity>
                     </View>
                   </View>
                 )}
 
-                <View style={styles.sectionDivider} />
-                <Text style={styles.sectionTitle}>Preferences</Text>
+                <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Preferences</Text>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Language</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Language</Text>
                   <DropDownPicker
                     open={languageOpen}
                     value={languageValue}
@@ -421,8 +423,10 @@ const [reminderValue, setReminderValue] = useState(null);
                     setValue={setLanguageValue}
                     onOpen={() => { setPronounsOpen(false); setCountryOpen(false); }}
                     placeholder="Select your preferred language"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
+                    style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    dropDownContainerStyle={[styles.dropdownContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    textStyle={{ color: colors.text }}
+                    placeholderStyle={{ color: colors.textSecondary }}
                     zIndex={3000}
                     zIndexInverse={1000}
                     listMode="SCROLLVIEW"
@@ -430,7 +434,7 @@ const [reminderValue, setReminderValue] = useState(null);
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Pronouns</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Pronouns</Text>
                   <DropDownPicker
                     open={pronounsOpen}
                     value={pronounsValue}
@@ -439,8 +443,10 @@ const [reminderValue, setReminderValue] = useState(null);
                     setValue={setPronounsValue}
                     onOpen={() => { setLanguageOpen(false); setCountryOpen(false); }}
                     placeholder="Select your pronouns"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
+                    style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    dropDownContainerStyle={[styles.dropdownContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    textStyle={{ color: colors.text }}
+                    placeholderStyle={{ color: colors.textSecondary }}
                     zIndex={2000}
                     zIndexInverse={2000}
                     listMode="SCROLLVIEW"
@@ -448,7 +454,7 @@ const [reminderValue, setReminderValue] = useState(null);
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Country</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>Country</Text>
                   <DropDownPicker
                     open={countryOpen}
                     value={countryValue}
@@ -457,43 +463,46 @@ const [reminderValue, setReminderValue] = useState(null);
                     setValue={setCountryValue}
                     onOpen={() => { setLanguageOpen(false); setPronounsOpen(false); }}
                     placeholder="Select your country"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
+                    style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    dropDownContainerStyle={[styles.dropdownContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    textStyle={{ color: colors.text }}
+                    placeholderStyle={{ color: colors.textSecondary }}
                     zIndex={1000}
                     zIndexInverse={3000}
                     listMode="SCROLLVIEW"
                   />
                 </View>
 
-                <View style={styles.sectionDivider} />
-                <Text style={styles.sectionTitle}>Challenges & Goals</Text>
+                <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>Challenges & Goals</Text>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>What's Holding You Back?</Text>
-                  <Text style={styles.subLabel}>Select any challenges you face in achieving your goals.</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>What's Holding You Back?</Text>
+                  <Text style={[styles.subLabel, { color: colors.textSecondary }]}>Select any challenges you face in achieving your goals.</Text>
                   <View style={styles.barriersContainer}>
                     {barriers.map((barrier) => (
                       <TouchableOpacity
                         key={barrier}
-                        style={styles.barrierItem}
+                        style={[styles.barrierItem, { backgroundColor: colors.background, borderColor: colors.border }]}
                         onPress={() => handleToggleBarrier(barrier)}
                       >
                         <View style={[
                           styles.checkbox,
-                          selectedBarriers.includes(barrier) && styles.checkboxChecked
+                          { borderColor: colors.border },
+                          selectedBarriers.includes(barrier) && [styles.checkboxChecked, { backgroundColor: colors.primary, borderColor: colors.primary }]
                         ]}>
                           {selectedBarriers.includes(barrier) && (
                             <Ionicons name="checkmark" size={18} color="white" />
                           )}
                         </View>
-                        <Text style={styles.barrierLabel}>{barrier}</Text>
+                        <Text style={[styles.barrierLabel, { color: colors.text }]}>{barrier}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>How much time do you currently spend on your goals per month?</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>How much time do you currently spend on your goals per month?</Text>
                   <DropDownPicker
                     open={timeSpentOpen}
                     value={timeSpentValue}
@@ -502,8 +511,10 @@ const [reminderValue, setReminderValue] = useState(null);
                     setValue={setTimeSpentValue}
                     onOpen={() => { setTimeGoalOpen(false); setReminderOpen(false); setLanguageOpen(false); setPronounsOpen(false); setCountryOpen(false); }}
                     placeholder="Select an option"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
+                    style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    dropDownContainerStyle={[styles.dropdownContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    textStyle={{ color: colors.text }}
+                    placeholderStyle={{ color: colors.textSecondary }}
                     zIndex={6000}
                     zIndexInverse={1000}
                     listMode="SCROLLVIEW"
@@ -511,7 +522,7 @@ const [reminderValue, setReminderValue] = useState(null);
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>How much time would you like to spend?</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>How much time would you like to spend?</Text>
                   <DropDownPicker
                     open={timeGoalOpen}
                     value={timeGoalValue}
@@ -520,8 +531,10 @@ const [reminderValue, setReminderValue] = useState(null);
                     setValue={setTimeGoalValue}
                     onOpen={() => { setTimeSpentOpen(false); setReminderOpen(false); setLanguageOpen(false); setPronounsOpen(false); setCountryOpen(false); }}
                     placeholder="Select an option"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
+                    style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    dropDownContainerStyle={[styles.dropdownContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    textStyle={{ color: colors.text }}
+                    placeholderStyle={{ color: colors.textSecondary }}
                     zIndex={5000}
                     zIndexInverse={2000}
                     listMode="SCROLLVIEW"
@@ -529,7 +542,7 @@ const [reminderValue, setReminderValue] = useState(null);
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>How often do you want to be reminded?</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>How often do you want to be reminded?</Text>
                   <DropDownPicker
                     open={reminderOpen}
                     value={reminderValue}
@@ -538,8 +551,10 @@ const [reminderValue, setReminderValue] = useState(null);
                     setValue={setReminderValue}
                     onOpen={() => { setTimeSpentOpen(false); setTimeGoalOpen(false); setLanguageOpen(false); setPronounsOpen(false); setCountryOpen(false); }}
                     placeholder="Select an option"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
+                    style={[styles.dropdown, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    dropDownContainerStyle={[styles.dropdownContainer, { backgroundColor: colors.background, borderColor: colors.border }]}
+                    textStyle={{ color: colors.text }}
+                    placeholderStyle={{ color: colors.textSecondary }}
                     zIndex={4000}
                     zIndexInverse={3000}
                     listMode="SCROLLVIEW"
@@ -547,7 +562,7 @@ const [reminderValue, setReminderValue] = useState(null);
                 </View>
 
                 <TouchableOpacity 
-                  style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
+                  style={[styles.saveButton, { backgroundColor: colors.primary }, isLoading && styles.saveButtonDisabled]} 
                   onPress={handleSave}
                   disabled={isLoading}
                   activeOpacity={0.8}
@@ -568,10 +583,8 @@ const [reminderValue, setReminderValue] = useState(null);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
-    backgroundColor: '#04A777',
     paddingVertical: 20,
     paddingHorizontal: 24,
     flexDirection: 'row',
@@ -597,28 +610,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
     padding: 20,
   },
   errorText: {
     fontSize: 16,
-    color: '#E74C3C',
     textAlign: 'center',
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#04A777',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -641,7 +649,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   formContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 24,
     shadowColor: '#000',
@@ -653,40 +660,25 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontFamily: 'Pacifico_400Regular',
     fontSize: 32,
-    color: '#27AE60',
     textAlign: 'center',
     marginBottom: 8,
   },
   pageSubtitle: {
     fontFamily: 'OpenSans_700Bold',
     fontSize: 16,
-    color: '#666666',
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 22,
   },
-  backButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 15,
-    borderWidth: 2,
-    borderColor: '#2A6BB8',
-  },
   sectionTitle: {
     fontFamily: 'Oswald_600SemiBold',
     fontSize: 20,
-    color: '#333333',
     marginBottom: 20,
     marginTop: 20,
     textAlign: 'left',
   },
   sectionDivider: {
     height: 1,
-    backgroundColor: '#E5E5EA',
     marginVertical: 20,
     marginHorizontal: -10,
   },
@@ -696,19 +688,15 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'Oswald_600SemiBold',
     fontSize: 16,
-    color: '#333333',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     fontFamily: 'OpenSans_700Bold',
-    color: '#333333',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -716,10 +704,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   inputFocused: {
-    borderColor: '#3177C9',
     borderWidth: 2,
-    shadowColor: '#3177C9',
-    shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
@@ -727,10 +712,8 @@ const styles = StyleSheet.create({
   passwordInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     paddingHorizontal: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -743,7 +726,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     fontFamily: 'OpenSans_700Bold',
-    color: '#333333',
   },
   eyeButton: {
     padding: 8,
@@ -751,10 +733,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(4, 167, 119, 0.1)',
   },
   dropdown: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     height: 58,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -763,9 +743,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   dropdownContainer: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -774,7 +752,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   saveButton: {
-    backgroundColor: '#04A777',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -794,12 +771,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Oswald_600SemiBold',
   },
   emailChangeContainer: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#04A777',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -809,7 +784,6 @@ const styles = StyleSheet.create({
   emailChangeTitle: {
     fontFamily: 'Oswald_600SemiBold',
     fontSize: 16,
-    color: '#333333',
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -822,24 +796,19 @@ const styles = StyleSheet.create({
   },
   emailDisplayLabel: {
     fontSize: 12,
-    color: '#666666',
     marginBottom: 4,
     fontFamily: 'OpenSans_700Bold',
   },
   emailDisplayValue: {
     fontSize: 14,
-    color: '#333333',
     fontFamily: 'OpenSans_700Bold',
-    backgroundColor: '#FFFFFF',
     padding: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
   },
   subLabel: {
     fontFamily: 'OpenSans_700Bold',
     fontSize: 14,
-    color: '#666666',
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -849,13 +818,11 @@ const styles = StyleSheet.create({
   barrierItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -867,7 +834,6 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: '#C7C7CC',
     marginRight: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -878,7 +844,6 @@ const styles = StyleSheet.create({
   },
   barrierLabel: {
     fontSize: 16,
-    color: '#333333',
     fontFamily: 'OpenSans_700Bold',
     flex: 1,
   },

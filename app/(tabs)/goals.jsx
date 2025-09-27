@@ -5,6 +5,7 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
 import { listMyGoals } from "../../lib/goalRepo";
 import SnowyMountain from "../../components/SnowyMountain";
+import { useTheme } from "../../context/ThemeContext";
 
 
 function formatDueDate(isoString) {
@@ -15,14 +16,14 @@ function formatDueDate(isoString) {
 }
 
 
-function getPriorityColor(level) {
+function getPriorityColor(level, themeColors) {
   switch (level) {
-    case 1: return colors.priority1;
-    case 2: return colors.priority2;
-    case 3: return colors.priority3;
-    case 4: return colors.priority4;
-    case 5: return colors.priority5;
-    default: return '#E0E0E0'; 
+    case 1: return themeColors.success;
+    case 2: return themeColors.warning;
+    case 3: return '#F2994A';
+    case 4: return themeColors.danger;
+    case 5: return '#C22B34';
+    default: return themeColors.border; 
   }
 }
 
@@ -46,25 +47,25 @@ const CheckmarkIcon = ({ color, size }) => (
 );
 
 
-const GoalItem = ({ item, onPress }) => (
-  <TouchableOpacity style={styles.goalCard} onPress={onPress}>
+const GoalItem = ({ item, onPress, colors }) => (
+  <TouchableOpacity style={[styles.goalCard, { backgroundColor: colors.card }]} onPress={onPress}>
     <View style={styles.mountainRow}>
         {[1, 2, 3, 4, 5].map((n) => (
             <SnowyMountain
                 key={n}
                 width={20}
                 height={20}
-                mountainColor={n <= item.priority ? getPriorityColor(n) : '#E0E0E0'}
+                mountainColor={n <= item.priority ? getPriorityColor(n, colors) : colors.border}
                 snowColor={'#FFFFFF'}
                 strokeWidth={0}
             />
         ))}
     </View>
-    <Text style={styles.goalTitle}>{item.title}</Text>
-    <Text style={styles.goalDescription} numberOfLines={2}>{item.description}</Text>
-    <View style={styles.cardFooter}>
+    <Text style={[styles.goalTitle, { color: colors.text }]}>{item.title}</Text>
+    <Text style={[styles.goalDescription, { color: colors.textSecondary }]} numberOfLines={2}>{item.description}</Text>
+    <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
         <CalendarIcon color={colors.textSecondary} size={16} />
-        <Text style={styles.dueDateText}>{formatDueDate(item.targetDate)}</Text>
+        <Text style={[styles.dueDateText, { color: colors.textSecondary }]}>{formatDueDate(item.targetDate)}</Text>
     </View>
   </TouchableOpacity>
 );
@@ -72,6 +73,7 @@ const GoalItem = ({ item, onPress }) => (
 export default function GoalsScreen() {
     const navigation = useNavigation();
     const isFocused = useIsFocused();
+    const { colors } = useTheme();
     const [goals, setGoals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -122,52 +124,52 @@ export default function GoalsScreen() {
   
     if (loading && !refreshing) {
         return (
-          <View style={styles.centered}>
-            <ActivityIndicator size="large" color={colors.primaryBlue} />
+          <View style={[styles.centered, { backgroundColor: colors.background }]}>
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
         );
     }
     if (error) {
         return (
-          <View style={styles.centered}>
-            <Text style={styles.errorText}>{error}</Text>
+          <View style={[styles.centered, { backgroundColor: colors.background }]}>
+            <Text style={[styles.errorText, { color: colors.danger }]}>{error}</Text>
           </View>
         );
     }
   
     return (
-      <View style={styles.screen}>
+      <View style={[styles.screen, { backgroundColor: colors.background }]}>
         {/* Unified Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
             <View>
-                <Text style={styles.headerTitle}>My Goals</Text>
-                <Text style={styles.headerSubtitle}>Your path to success starts here.</Text>
+                <Text style={[styles.headerTitle, { color: colors.primary }]}>My Goals</Text>
+                <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Your path to success starts here.</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Menu>
                     <MenuTrigger>
                         <FilterIcon color={colors.textSecondary} size={28} />
                     </MenuTrigger>
-                    <MenuOptions customStyles={menuStyles}>
+                    <MenuOptions customStyles={getMenuStyles(colors)}>
                         <MenuOption onSelect={() => setSortBy('updatedAt')} style={menuStyles.menuOption}>
-                            <Text style={menuStyles.menuOptionText}>Recently Updated</Text>
-                            {sortBy === 'updatedAt' && <CheckmarkIcon color={colors.accent} size={20} />}
+                            <Text style={[menuStyles.menuOptionText, { color: colors.text }]}>Recently Updated</Text>
+                            {sortBy === 'updatedAt' && <CheckmarkIcon color={colors.primary} size={20} />}
                         </MenuOption>
                         <MenuOption onSelect={() => setSortBy('priority')} style={menuStyles.menuOption}>
-                            <Text style={menuStyles.menuOptionText}>Priority (High-Low)</Text>
-                            {sortBy === 'priority' && <CheckmarkIcon color={colors.accent} size={20} />}
+                            <Text style={[menuStyles.menuOptionText, { color: colors.text }]}>Priority (High-Low)</Text>
+                            {sortBy === 'priority' && <CheckmarkIcon color={colors.primary} size={20} />}
                         </MenuOption>
                         <MenuOption onSelect={() => setSortBy('date')} style={menuStyles.menuOption}>
-                            <Text style={menuStyles.menuOptionText}>Due Date</Text>
-                            {sortBy === 'date' && <CheckmarkIcon color={colors.accent} size={20} />}
+                            <Text style={[menuStyles.menuOptionText, { color: colors.text }]}>Due Date</Text>
+                            {sortBy === 'date' && <CheckmarkIcon color={colors.primary} size={20} />}
                         </MenuOption>
                         <MenuOption onSelect={() => setSortBy('createdAt')} style={menuStyles.menuOption}>
-                            <Text style={menuStyles.menuOptionText}>Date Created</Text>
-                            {sortBy === 'createdAt' && <CheckmarkIcon color={colors.accent} size={20} />}
+                            <Text style={[menuStyles.menuOptionText, { color: colors.text }]}>Date Created</Text>
+                            {sortBy === 'createdAt' && <CheckmarkIcon color={colors.primary} size={20} />}
                         </MenuOption>
                         <MenuOption onSelect={() => setSortBy('title')} style={menuStyles.menuOption}>
-                            <Text style={menuStyles.menuOptionText}>Title (A-Z)</Text>
-                            {sortBy === 'title' && <CheckmarkIcon color={colors.accent} size={20} />}
+                            <Text style={[menuStyles.menuOptionText, { color: colors.text }]}>Title (A-Z)</Text>
+                            {sortBy === 'title' && <CheckmarkIcon color={colors.primary} size={20} />}
                         </MenuOption>
                     </MenuOptions>
                 </Menu>
@@ -178,53 +180,34 @@ export default function GoalsScreen() {
           data={sortedGoals}
           contentContainerStyle={styles.listContainer}
           keyExtractor={(item) => item.$id}
-          renderItem={({ item }) => ( <GoalItem item={item} onPress={() => navigation.navigate("ViewGoal", { goalId: item.$id })} /> )}
-          ListEmptyComponent={() => ( <View style={styles.centered}> <Text style={styles.emptyText}>Your journey begins here.</Text> <Text style={styles.emptySubtext}>Tap the '+' button to set your first goal.</Text> </View> )}
+          renderItem={({ item }) => ( <GoalItem item={item} onPress={() => navigation.navigate("ViewGoal", { goalId: item.$id })} colors={colors} /> )}
+          ListEmptyComponent={() => ( <View style={styles.centered}> <Text style={[styles.emptyText, { color: colors.text }]}>Your journey begins here.</Text> <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Tap the '+' button to set your first goal.</Text> </View> )}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         />
       </View>
     );
 }
 
-const colors = {
-    background: '#F2F2F2',
-    cardBackground: '#FFFFFF',
-    textPrimary: '#333333',
-    textSecondary: '#828282',
-    primaryBlue: '#2F80ED',
-    accent: '#27AE60',
-    priority1: '#6FCF97',   
-    priority2: '#F2C94C',  
-    priority3: '#F2994A',   
-    priority4: '#EB5757',   
-    priority5: '#C22B34',
-};
-
 const styles = StyleSheet.create({
     screen: {
         flex: 1,
-        backgroundColor: colors.background,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center', 
-        backgroundColor: colors.cardBackground,
         paddingHorizontal: 20,
         paddingTop: 5, 
         paddingBottom: 10,
         borderBottomWidth: 1,
-        borderBottomColor: colors.background,
     },
     headerTitle: {
         fontFamily: 'Pacifico_400Regular', 
         fontSize: 32,
-        color: colors.accent,
     },
     headerSubtitle: {
         fontFamily: 'OpenSans-Regular',
         fontSize: 14,
-        color: colors.textSecondary,
     },
     listContainer: {
         padding: 16,
@@ -237,7 +220,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
     goalCard: {
-        backgroundColor: colors.cardBackground,
         borderRadius: 16,
         padding: 20,
         marginBottom: 16,
@@ -255,13 +237,11 @@ const styles = StyleSheet.create({
     goalTitle: {
         fontFamily: 'Oswald-Bold',
         fontSize: 22,
-        color: colors.textPrimary,
         marginBottom: 6,
     },
     goalDescription: {
         fontFamily: 'OpenSans-Regular',
         fontSize: 14,
-        color: colors.textSecondary,
         lineHeight: 20,
         marginBottom: 16,
     },
@@ -270,37 +250,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 8,
         borderTopWidth: 1,
-        borderTopColor: colors.background,
         paddingTop: 12,
     },
     dueDateText: {
         fontFamily: 'OpenSans-SemiBold',
         fontSize: 12,
-        color: colors.textSecondary,
     },
     errorText: {
         fontSize: 16,
-        color: "#b91c1c"
     },
     emptyText: {
         fontFamily: 'Oswald-Bold',
         fontSize: 24,
-        color: colors.textPrimary,
         textAlign: "center"
     },
     emptySubtext: {
         fontFamily: 'OpenSans-Regular',
         fontSize: 16,
-        color: colors.textSecondary,
         marginTop: 8,
         textAlign: "center"
     },
-
 });
 
-const menuStyles = {
+const getMenuStyles = (colors) => ({
     optionsContainer: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.card,
         padding: 5,
         borderRadius: 12,
         shadowColor: '#000',
@@ -310,7 +284,9 @@ const menuStyles = {
         elevation: 5,
         marginTop: 35,
     },
-    
+});
+
+const menuStyles = {
     menuOption: {
         flexDirection: 'row',
         justifyContent: 'space-between', 
@@ -322,6 +298,5 @@ const menuStyles = {
     menuOptionText: {
         fontFamily: 'OpenSans-SemiBold',
         fontSize: 16,
-        color: colors.textPrimary,
     },
 };

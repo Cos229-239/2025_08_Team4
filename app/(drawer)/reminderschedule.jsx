@@ -16,6 +16,7 @@ import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { useTheme } from '../../context/ThemeContext';
 import { updateProfile } from '../../lib/profile';
 import { NotificationService, REMINDER_FREQUENCIES } from '../../lib/notifications';
 import { account } from '../../lib/appwrite';
@@ -24,6 +25,7 @@ import Constants from 'expo-constants';
 export default function ReminderScheduleScreen() {
   const router = useRouter();
   const { profile, refresh, user } = useGlobalContext();
+  const { colors } = useTheme();
   const [fontsLoaded, fontError] = useFonts({
     Pacifico_400Regular,
     Oswald_600SemiBold,
@@ -136,9 +138,9 @@ export default function ReminderScheduleScreen() {
   if (fontError) {
     console.error('Font loading error:', fontError);
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Font loading error. Please restart the app.</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.danger }]}>Font loading error. Please restart the app.</Text>
+        <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.primary }]} onPress={() => router.back()}>
           <Text style={styles.retryButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -147,16 +149,16 @@ export default function ReminderScheduleScreen() {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#04A777" />
-        <Text style={styles.loadingText}>Loading fonts...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading fonts...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.primary }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="white" />
         </TouchableOpacity>
@@ -169,31 +171,39 @@ export default function ReminderScheduleScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.formContainer}>
-          <Text style={styles.pageSubtitle}>Configure when and how often you want to receive reminders</Text>
+        <View style={[styles.formContainer, { backgroundColor: colors.card }]}>
+          <Text style={[styles.pageSubtitle, { color: colors.textSecondary }]}>Configure when and how often you want to receive reminders</Text>
           
           {isExpoGo && (
-            <View style={styles.expoGoWarning}>
-              <Ionicons name="warning-outline" size={20} color="#FF6B35" />
-              <Text style={styles.expoGoWarningText}>
+            <View style={[styles.expoGoWarning, { backgroundColor: colors.warning + '20', borderLeftColor: colors.warning }]}>
+              <Ionicons name="warning-outline" size={20} color={colors.warning} />
+              <Text style={[styles.expoGoWarningText, { color: colors.warning }]}>
                 Push notifications have limited functionality in Expo Go. For full notification support, use a development build.
               </Text>
             </View>
           )}
           
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Enable Notifications</Text>
-            <Text style={styles.subLabel}>Receive reminders about your goals and tasks</Text>
+            <Text style={[styles.label, { color: colors.text }]}>Enable Notifications</Text>
+            <Text style={[styles.subLabel, { color: colors.textSecondary }]}>Receive reminders about your goals and tasks</Text>
             <TouchableOpacity
-              style={[styles.toggleButton, notificationsEnabled && styles.toggleButtonActive]}
+              style={[
+                styles.toggleButton, 
+                { backgroundColor: colors.background, borderColor: colors.border },
+                notificationsEnabled && [styles.toggleButtonActive, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]
+              ]}
               onPress={() => setNotificationsEnabled(!notificationsEnabled)}
             >
               <Ionicons 
                 name={notificationsEnabled ? "notifications" : "notifications-off"} 
                 size={24} 
-                color={notificationsEnabled ? "#04A777" : "#666"} 
+                color={notificationsEnabled ? colors.primary : colors.textSecondary} 
               />
-              <Text style={[styles.toggleText, notificationsEnabled && styles.toggleTextActive]}>
+              <Text style={[
+                styles.toggleText, 
+                { color: colors.textSecondary },
+                notificationsEnabled && [styles.toggleTextActive, { color: colors.primary }]
+              ]}>
                 {notificationsEnabled ? 'Enabled' : 'Disabled'}
               </Text>
             </TouchableOpacity>
@@ -202,34 +212,36 @@ export default function ReminderScheduleScreen() {
           {notificationsEnabled && (
             <>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Daily Standup Time</Text>
-                <Text style={styles.subLabel}>When you want to receive your daily goal reminder</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Daily Standup Time</Text>
+                <Text style={[styles.subLabel, { color: colors.textSecondary }]}>When you want to receive your daily goal reminder</Text>
                 <TouchableOpacity
-                  style={styles.timeButton}
+                  style={[styles.timeButton, { backgroundColor: colors.background, borderColor: colors.border }]}
                   onPress={() => setShowTimePicker(true)}
                 >
-                  <Ionicons name="time-outline" size={24} color="#04A777" />
-                  <Text style={styles.timeText}>{formatTime(dailyStandupTime)}</Text>
-                  <Ionicons name="chevron-forward-outline" size={20} color="#666" />
+                  <Ionicons name="time-outline" size={24} color={colors.primary} />
+                  <Text style={[styles.timeText, { color: colors.text }]}>{formatTime(dailyStandupTime)}</Text>
+                  <Ionicons name="chevron-forward-outline" size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Goal Reminder Frequency</Text>
-                <Text style={styles.subLabel}>How often you want to be reminded about your goals</Text>
+                <Text style={[styles.label, { color: colors.text }]}>Goal Reminder Frequency</Text>
+                <Text style={[styles.subLabel, { color: colors.textSecondary }]}>How often you want to be reminded about your goals</Text>
                 <View style={styles.frequencyContainer}>
                   {Object.entries(REMINDER_FREQUENCIES).map(([key, value]) => (
                     <TouchableOpacity
                       key={key}
                       style={[
                         styles.frequencyButton,
-                        reminderFrequency === key && styles.frequencyButtonActive
+                        { backgroundColor: colors.background, borderColor: colors.border },
+                        reminderFrequency === key && [styles.frequencyButtonActive, { backgroundColor: colors.primary, borderColor: colors.primary }]
                       ]}
                       onPress={() => setReminderFrequency(key)}
                     >
                       <Text style={[
                         styles.frequencyText,
-                        reminderFrequency === key && styles.frequencyTextActive
+                        { color: colors.textSecondary },
+                        reminderFrequency === key && [styles.frequencyTextActive, { color: colors.card }]
                       ]}>
                         {value.label}
                       </Text>
@@ -241,7 +253,7 @@ export default function ReminderScheduleScreen() {
           )}
 
           <TouchableOpacity 
-            style={[styles.saveButton, isLoading && styles.saveButtonDisabled]} 
+            style={[styles.saveButton, { backgroundColor: colors.primary }, isLoading && styles.saveButtonDisabled]} 
             onPress={handleSave}
             disabled={isLoading}
             activeOpacity={0.8}
@@ -271,10 +283,8 @@ export default function ReminderScheduleScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
-    backgroundColor: '#04A777',
     paddingVertical: 20,
     paddingHorizontal: 24,
     flexDirection: 'row',
@@ -300,28 +310,23 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
     padding: 20,
   },
   errorText: {
     fontSize: 16,
-    color: '#E74C3C',
     textAlign: 'center',
     marginBottom: 20,
   },
   retryButton: {
-    backgroundColor: '#04A777',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
@@ -341,7 +346,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   formContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 24,
     shadowColor: '#000',
@@ -353,7 +357,6 @@ const styles = StyleSheet.create({
   pageSubtitle: {
     fontFamily: 'OpenSans_700Bold',
     fontSize: 16,
-    color: '#666666',
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 22,
@@ -364,25 +367,21 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'Oswald_600SemiBold',
     fontSize: 18,
-    color: '#333333',
     marginBottom: 8,
   },
   subLabel: {
     fontFamily: 'OpenSans_700Bold',
     fontSize: 14,
-    color: '#666666',
     marginBottom: 12,
     lineHeight: 20,
   },
   toggleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E5E5EA',
   },
   toggleButtonActive: {
     backgroundColor: 'rgba(4, 167, 119, 0.1)',
@@ -391,7 +390,6 @@ const styles = StyleSheet.create({
   toggleText: {
     fontFamily: 'OpenSans_700Bold',
     fontSize: 16,
-    color: '#666666',
     marginLeft: 12,
   },
   toggleTextActive: {
@@ -400,12 +398,10 @@ const styles = StyleSheet.create({
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -416,7 +412,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'OpenSans_700Bold',
     fontSize: 16,
-    color: '#333333',
     marginLeft: 12,
   },
   frequencyContainer: {
@@ -425,12 +420,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   frequencyButton: {
-    backgroundColor: '#F8F9FA',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
   },
   frequencyButtonActive: {
     backgroundColor: '#04A777',
@@ -439,13 +432,11 @@ const styles = StyleSheet.create({
   frequencyText: {
     fontFamily: 'OpenSans_700Bold',
     fontSize: 14,
-    color: '#666666',
   },
   frequencyTextActive: {
     color: '#FFFFFF',
   },
   saveButton: {
-    backgroundColor: '#04A777',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -467,19 +458,16 @@ const styles = StyleSheet.create({
   expoGoWarning: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFF3E0',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#FF6B35',
   },
   expoGoWarningText: {
     flex: 1,
     fontFamily: 'OpenSans_700Bold',
     fontSize: 14,
-    color: '#E65100',
     marginLeft: 8,
     lineHeight: 20,
   },

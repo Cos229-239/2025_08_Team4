@@ -3,13 +3,14 @@ import { Text, Pressable, StyleSheet } from "react-native";
 import { useFonts, Pacifico_400Regular } from "@expo-google-fonts/pacifico";
 import { Oswald_600SemiBold } from "@expo-google-fonts/oswald";
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from "../../context/ThemeContext";
 
-const HEADER_TITLE = (txt) => (
+const HEADER_TITLE = (txt, colors) => (
   <Text
     style={{
       fontFamily: "Pacifico_400Regular",
       fontSize: 40,
-      color: "#FFFFFF",
+      color: colors.text,
     }}
   >
     {txt}
@@ -18,6 +19,7 @@ const HEADER_TITLE = (txt) => (
 
 export default function DrawerLayout() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [fontsLoaded] = useFonts({
     Pacifico_400Regular,
     Oswald_600SemiBold,
@@ -31,21 +33,22 @@ export default function DrawerLayout() {
     <Stack
       screenOptions={{
         headerTitleAlign: "center",
-        headerStyle: { backgroundColor: "#3177C9" },
-        headerTintColor: "#fff",
+        headerStyle: { backgroundColor: colors.card },
+        headerTintColor: colors.text,
       }}
     >
       <Stack.Screen
         name="settings"
         options={{
-          headerStyle: { backgroundColor: "#F8F9FA" }, 
+          headerStyle: { backgroundColor: colors.background }, 
           headerShadowVisible: false, 
           headerTitle: "Settings",
           headerTitleStyle: {
             fontFamily: "Oswald_600SemiBold",
             fontSize: 22,
+            color: colors.text,
           },
-          headerTintColor: '#212529',
+          headerTintColor: colors.text,
         }}
       />
       <Stack.Screen
@@ -76,9 +79,9 @@ export default function DrawerLayout() {
         name="about" 
         options={{ 
           headerShown: false,
-          headerTitle: () => HEADER_TITLE("About LucidPaths"),
+          headerTitle: () => HEADER_TITLE("About LucidPaths", colors),
           headerLeft: () => (
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Pressable style={[styles.backButton, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={24} color="white" />
             </Pressable>
           ),
@@ -87,9 +90,9 @@ export default function DrawerLayout() {
     <Stack.Screen 
         name="placeholder" 
         options={{ 
-          headerTitle: () => HEADER_TITLE("Test DB Connection"),
+          headerTitle: () => HEADER_TITLE("Test DB Connection", colors),
           headerLeft: () => (
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Pressable style={[styles.backButton, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={24} color="white" />
             </Pressable>
           ),
@@ -98,9 +101,9 @@ export default function DrawerLayout() {
       <Stack.Screen
       name="ExampleScreen"
       options={{
-        headerTitle: () => HEADER_TITLE("Example Screen"),
+        headerTitle: () => HEADER_TITLE("Example Screen", colors),
         headerLeft: () => (
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Pressable style={[styles.backButton, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={24} color="white" />
           </Pressable>
         ),
@@ -110,9 +113,9 @@ export default function DrawerLayout() {
          <Stack.Screen
       name="fullGoal"
       options={{
-        headerTitle: () => HEADER_TITLE("Goal Details"),
+        headerTitle: () => HEADER_TITLE("Goal Details", colors),
         headerLeft: () => (
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Pressable style={[styles.backButton, { backgroundColor: colors.primary, borderColor: colors.primary }]} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={24} color="white" />
           </Pressable>
         ),
@@ -124,7 +127,6 @@ export default function DrawerLayout() {
 
 const styles = StyleSheet.create({
   backButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -132,6 +134,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 15,
     borderWidth: 2, 
-    borderColor: '#2A6BB8',
   },
 });

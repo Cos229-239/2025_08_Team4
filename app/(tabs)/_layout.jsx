@@ -8,15 +8,28 @@ import PlusButton from "../../components/Buttons/PlusButton";
 import { useRightDrawer } from "../../components/RightDrawerContext";
 import RightDrawer from "../../components/RightDrawer";
 import AddGoal from "../../components/Buttons/AddGoal";
+import { useTheme } from "../../context/ThemeContext";
 
 export default function TabsLayout() {
   const router = useRouter();
   const { openDrawer } = useRightDrawer();
+  const { colors } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false); 
 
   return (
     <>
-      <Tabs screenOptions={{ tabBarActiveTintColor: '#04A777' }}>
+      <Tabs screenOptions={{ 
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
+        },
+        headerStyle: {
+          backgroundColor: colors.card,
+        },
+        headerTintColor: colors.text,
+      }}>
         <Tabs.Screen
           name="index"
           options={{

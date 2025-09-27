@@ -3,6 +3,7 @@ import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { Oswald_600SemiBold } from '@expo-google-fonts/oswald';
 import { OpenSans_700Bold } from '@expo-google-fonts/open-sans';
 import GlobalProvider, { useGlobalContext } from '../context/GlobalProvider';
+import ThemeProvider from '../context/ThemeContext';
 import { useEffect } from 'react';
 import { RightDrawerProvider } from '../components/RightDrawerContext';
 import { MenuProvider } from 'react-native-popup-menu';
@@ -70,13 +71,15 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <GlobalProvider>
-      <RightDrawerProvider>
-        <MenuProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </MenuProvider>
-      </RightDrawerProvider>
+      <ThemeProvider>
+        <RightDrawerProvider>
+          <MenuProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <RootLayoutNav />
+            </GestureHandlerRootView>
+          </MenuProvider>
+        </RightDrawerProvider>
+      </ThemeProvider>
     </GlobalProvider>
   );
 }

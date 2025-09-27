@@ -7,68 +7,59 @@ import { listMyGoals } from '../../lib/goalRepo';
 import { listMyTasks } from '../../lib/taskRepo';
 import { listMyProjects } from '../../lib/projectRepo'; // 👈 NEW
 import { Menu, MenuOptions, MenuOption, MenuTrigger } from 'react-native-popup-menu';
+import { useTheme } from '../../context/ThemeContext';
 
-const COLORS = { 
-  primary: '#04A777',
-  primaryLight: '#E6F6F1',
-  background: '#F8F9FA', 
-  card: '#FFFFFF', 
-  text: '#212529', 
-  textSecondary: '#6C757D', 
-  border: '#E9ECEF',
-};
-
-const FilterControl = ({ options, selectedOption, onSelect }) => (
-  <View style={styles.filterContainer}>
+const FilterControl = ({ options, selectedOption, onSelect, colors }) => (
+  <View style={[styles.filterContainer, { backgroundColor: colors.border }]}>
     {options.map(option => (
-      <Pressable key={option} style={[styles.filterButton, selectedOption === option && styles.filterButtonActive]} onPress={() => onSelect(option)}>
-        <Text style={[styles.filterButtonText, selectedOption === option && styles.filterButtonTextActive]}>{option}</Text>
+      <Pressable key={option} style={[styles.filterButton, selectedOption === option && { backgroundColor: colors.card }]} onPress={() => onSelect(option)}>
+        <Text style={[styles.filterButtonText, { color: colors.textSecondary }, selectedOption === option && { color: colors.primary }]}>{option}</Text>
       </Pressable>
     ))}
   </View>
 );
 
-const ProjectCard = ({ projectName, goals, taskCount, onPress }) => {
+const ProjectCard = ({ projectName, goals, taskCount, onPress, colors }) => {
   const completedGoals = useMemo(() => goals.filter(g => g.status === 'Completed').length, [goals]);
   const progress = goals.length > 0 ? (completedGoals / goals.length) * 100 : 0;
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={onPress}>
       <View style={styles.cardHeader}>
-        <View style={styles.cardIcon}>
-          <Ionicons name="briefcase-outline" size={20} color={COLORS.primary} />
+        <View style={[styles.cardIcon, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name="briefcase-outline" size={20} color={colors.primary} />
         </View>
-        <Text style={styles.cardTitle}>{projectName}</Text>
+        <Text style={[styles.cardTitle, { color: colors.text }]}>{projectName}</Text>
       </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Ionicons name="flag-outline" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.cardSubtitle}>
+          <Ionicons name="flag-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
             {goals.length} {goals.length === 1 ? 'Goal' : 'Goals'}
           </Text>
         </View>
         <View style={styles.statItem}>
-          <Ionicons name="checkmark-done-outline" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.cardSubtitle}>
+          <Ionicons name="checkmark-done-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
             {taskCount} {taskCount === 1 ? 'Task' : 'Tasks'}
           </Text>
         </View>
       </View>
 
-      <View style={styles.progressBarBackground}>
-        <View style={[styles.progressBarFill, { width: `${Math.round(progress)}%` }]} />
+      <View style={[styles.progressBarBackground, { backgroundColor: colors.border }]}>
+        <View style={[styles.progressBarFill, { width: `${Math.round(progress)}%`, backgroundColor: colors.primary }]} />
       </View>
-      <Text style={styles.progressText}>{Math.round(progress)}% Complete</Text>
+      <Text style={[styles.progressText, { color: colors.textSecondary }]}>{Math.round(progress)}% Complete</Text>
     </Pressable>
   );
 };
 
-// 👇 NEW: “Not Assigned” card (goals with no project relation)
-const NotAssignedCard = ({ goals, taskCount, onPress }) => {
+// 👇 NEW: "Not Assigned" card (goals with no project relation)
+const NotAssignedCard = ({ goals, taskCount, onPress, colors }) => {
   const completed = useMemo(() => goals.filter(g => g.status === 'Completed').length, [goals]);
   const progress = goals.length ? (completed / goals.length) * 100 : 0;
   return (
-    <Pressable style={[styles.card, { borderStyle: 'dashed' }]} onPress={onPress}>
+    <Pressable style={[styles.card, { borderStyle: 'dashed', backgroundColor: colors.card, borderColor: colors.border }]} onPress={onPress}>
       <View style={styles.cardHeader}>
         <View style={[styles.cardIcon, { backgroundColor: '#FDECEC' }]}>
           <Ionicons name="folder-open-outline" size={20} color="#EF4444" />
@@ -78,29 +69,30 @@ const NotAssignedCard = ({ goals, taskCount, onPress }) => {
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Ionicons name="flag-outline" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.cardSubtitle}>
+          <Ionicons name="flag-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
             {goals.length} {goals.length === 1 ? 'Goal' : 'Goals'}
           </Text>
         </View>
         <View style={styles.statItem}>
-          <Ionicons name="checkmark-done-outline" size={16} color={COLORS.textSecondary} />
-          <Text style={styles.cardSubtitle}>
+          <Ionicons name="checkmark-done-outline" size={16} color={colors.textSecondary} />
+          <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
             {taskCount} {taskCount === 1 ? 'Task' : 'Tasks'}
           </Text>
         </View>
       </View>
 
-      <View style={styles.progressBarBackground}>
+      <View style={[styles.progressBarBackground, { backgroundColor: colors.border }]}>
         <View style={[styles.progressBarFill, { width: `${Math.round(progress)}%`, backgroundColor: '#EF4444' }]} />
       </View>
-      <Text style={styles.progressText}>{Math.round(progress)}% Complete</Text>
+      <Text style={[styles.progressText, { color: colors.textSecondary }]}>{Math.round(progress)}% Complete</Text>
     </Pressable>
   );
 };
 
 export default function ProjectsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [projectsRaw, setProjectsRaw] = useState([]); // 👈 NEW
   const [goals, setGoals] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -223,27 +215,27 @@ export default function ProjectsScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>My Projects</Text>
-            <Text style={styles.headerSubtitle}>Organize your goals, achieve more.</Text>
+            <Text style={[styles.headerTitle, { color: colors.primary }]}>My Projects</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Organize your goals, achieve more.</Text>
           </View>
 
           <Menu>
             <MenuTrigger>
-              <Ionicons name="options-outline" size={24} color={COLORS.textSecondary} />
+              <Ionicons name="options-outline" size={24} color={colors.textSecondary} />
             </MenuTrigger>
-            <MenuOptions customStyles={menuStyles}>
-              <Text style={menuStyles.title}>Sort By</Text>
+            <MenuOptions customStyles={getMenuStyles(colors)}>
+              <Text style={[menuStyles.title, { color: colors.textSecondary }]}>Sort By</Text>
               <MenuOption onSelect={() => setSortBy('Recently Updated')} text='Recently Updated' />
               <MenuOption onSelect={() => setSortBy('Highest Priority')} text='Highest Priority' />
               <MenuOption onSelect={() => setSortBy('Recent Task Activity')} text='Recent Task Activity' />
@@ -251,7 +243,7 @@ export default function ProjectsScreen() {
           </Menu>
         </View>
 
-        <FilterControl options={['All', 'Active', 'Completed']} selectedOption={filter} onSelect={setFilter} />
+        <FilterControl options={['All', 'Active', 'Completed']} selectedOption={filter} onSelect={setFilter} colors={colors} />
 
         {/* Not Assigned first (only if there are any) */}
         {notAssigned.goals.length > 0 && (
@@ -268,6 +260,7 @@ export default function ProjectsScreen() {
                 },
               })
             }
+            colors={colors}
           />
         )}
 
@@ -289,14 +282,15 @@ export default function ProjectsScreen() {
                   },
                 })
               }
+              colors={colors}
             />
           ))
         ) : (
           notAssigned.goals.length === 0 && (
             <View style={styles.emptyContainer}>
-              <Ionicons name="folder-open-outline" size={64} color={COLORS.textSecondary} />
-              <Text style={styles.emptyTitle}>No Projects Found</Text>
-              <Text style={styles.emptySubtitle}>No projects match the current filter.</Text>
+              <Ionicons name="folder-open-outline" size={64} color={colors.textSecondary} />
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>No Projects Found</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>No projects match the current filter.</Text>
             </View>
           )
         )}
@@ -306,35 +300,33 @@ export default function ProjectsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1 },
   scrollContent: { padding: 16 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 8, marginBottom: 16 },
-  headerTitle: { fontFamily: 'Pacifico_400Regular', fontSize: 40, color: COLORS.primary },
-  headerSubtitle: { fontSize: 16, color: COLORS.textSecondary, marginTop: -5 },
-  filterContainer: { flexDirection: 'row', backgroundColor: COLORS.border, borderRadius: 12, padding: 4, marginBottom: 24 },
+  headerTitle: { fontFamily: 'Pacifico_400Regular', fontSize: 40 },
+  headerSubtitle: { fontSize: 16, marginTop: -5 },
+  filterContainer: { flexDirection: 'row', borderRadius: 12, padding: 4, marginBottom: 24 },
   filterButton: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-  filterButtonActive: { backgroundColor: COLORS.card, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 5, elevation: 3 },
-  filterButtonText: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary },
-  filterButtonTextActive: { color: COLORS.primary },
-  card: { backgroundColor: COLORS.card, borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: COLORS.border, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  filterButtonText: { fontSize: 14, fontWeight: '600' },
+  card: { borderRadius: 16, padding: 20, marginBottom: 16, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
   cardHeader: { flexDirection: 'row', alignItems: 'center' },
-  cardIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.primaryLight, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  cardTitle: { fontSize: 20, fontWeight: 'bold', color: COLORS.text, flex: 1 },
+  cardIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  cardTitle: { fontSize: 20, fontWeight: 'bold', flex: 1 },
   statsContainer: { flexDirection: 'row', marginTop: 8, marginLeft: 52, gap: 16 },
   statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  cardSubtitle: { fontSize: 14, color: COLORS.textSecondary },
-  progressBarBackground: { height: 8, borderRadius: 4, backgroundColor: COLORS.border, marginTop: 16, overflow: 'hidden' },
-  progressBarFill: { height: '100%', backgroundColor: COLORS.primary, borderRadius: 4 },
-  progressText: { fontSize: 12, color: COLORS.textSecondary, textAlign: 'right', marginTop: 4 },
+  cardSubtitle: { fontSize: 14 },
+  progressBarBackground: { height: 8, borderRadius: 4, marginTop: 16, overflow: 'hidden' },
+  progressBarFill: { height: '100%', borderRadius: 4 },
+  progressText: { fontSize: 12, textAlign: 'right', marginTop: 4 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, marginTop: '20%' },
-  emptyTitle: { fontSize: 22, fontWeight: 'bold', color: COLORS.text, marginTop: 16 },
-  emptySubtitle: { fontSize: 16, color: COLORS.textSecondary, textAlign: 'center', marginTop: 8 },
+  emptyTitle: { fontSize: 22, fontWeight: 'bold', marginTop: 16 },
+  emptySubtitle: { fontSize: 16, textAlign: 'center', marginTop: 8 },
 });
 
-const menuStyles = {
+const getMenuStyles = (colors) => ({
   optionsContainer: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 12,
     padding: 8,
     marginTop: 30,
@@ -344,11 +336,13 @@ const menuStyles = {
     shadowRadius: 10,
     elevation: 5,
   },
-  optionText: { fontSize: 16, color: COLORS.text },
+  optionText: { fontSize: 16, color: colors.text },
+});
+
+const menuStyles = {
   title: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: COLORS.textSecondary,
     textTransform: 'uppercase',
     paddingHorizontal: 10,
     paddingBottom: 8,

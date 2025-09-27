@@ -4,31 +4,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { useTheme } from '../../context/ThemeContext';
 import { updateProfile } from '../../lib/profile';
 import { REMINDER_FREQUENCIES } from '../../lib/notifications';
 import { account } from '../../lib/appwrite';
 
-const COLORS = {
-  primary: '#04A777',
-  background: '#F8F9FA',
-  card: '#FFFFFF',
-  text: '#212529',
-  textSecondary: '#6C757D',
-  border: '#E9ECEF',
-  danger: '#D9534F',
-};
 
-
-const SettingItem = ({ label, sublabel, type, value, onValueChange, onPress }) => {
+const SettingItem = ({ label, sublabel, type, value, onValueChange, onPress, colors }) => {
   return (
-    <Pressable onPress={onPress} style={styles.itemContainer} disabled={!onPress}>
+    <Pressable onPress={onPress} style={[styles.itemContainer, { backgroundColor: colors.card }]} disabled={!onPress}>
       <View style={styles.itemTextContainer}>
-        <Text style={[styles.itemLabel, type === 'danger' && styles.dangerText]}>{label}</Text>
-        {sublabel && <Text style={styles.itemSublabel}>{sublabel}</Text>}
+        <Text style={[styles.itemLabel, { color: colors.text }, type === 'danger' && { color: colors.danger }]}>{label}</Text>
+        {sublabel && <Text style={[styles.itemSublabel, { color: colors.textSecondary }]}>{sublabel}</Text>}
       </View>
-      {type === 'navigation' && <Ionicons name="chevron-forward-outline" size={22} color={COLORS.textSecondary} />}
-      {type === 'toggle' && <Switch trackColor={{ false: COLORS.border, true: COLORS.primary }} thumbColor={"#f4f3f4"} onValueChange={onValueChange} value={value} />}
-      {type === 'value' && <Text style={styles.itemValue}>{value}</Text>}
+      {type === 'navigation' && <Ionicons name="chevron-forward-outline" size={22} color={colors.textSecondary} />}
+      {type === 'toggle' && <Switch trackColor={{ false: colors.border, true: colors.primary }} thumbColor={colors.isDarkMode ? "#f4f3f4" : "#f4f3f4"} onValueChange={onValueChange} value={value} />}
+      {type === 'value' && <Text style={[styles.itemValue, { color: colors.primary }]}>{value}</Text>}
     </Pressable>
   );
 };
@@ -37,9 +28,9 @@ const SettingItem = ({ label, sublabel, type, value, onValueChange, onPress }) =
 export default function SettingsScreen() {
   const router = useRouter();
   const { profile, refresh, user } = useGlobalContext();
+  const { isDarkMode, colors, toggleTheme } = useTheme();
   
   const [is2FAEnabled, set2FAEnabled] = useState(false);
-  const [isDarkMode, setDarkMode] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [reminderSchedule, setReminderSchedule] = useState('Daily');
 
@@ -89,33 +80,33 @@ export default function SettingsScreen() {
   
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
         
-        <Text style={styles.sectionHeader}>Account</Text>
-        <View style={styles.card}>
-          <SettingItem label="Edit Profile" sublabel="Update your personal information" type="navigation" onPress={() => router.push('/(drawer)/editprofile')} />
-          <View style={styles.divider} />
-          <SettingItem label="Change Password" sublabel="Update your account password" type="navigation" onPress={() => router.push('/(drawer)/changepassword')} />
-          <View style={styles.divider} />
-          <SettingItem label="Two-Factor Authentication" sublabel="Add an extra layer of security" type="toggle" value={is2FAEnabled} onValueChange={set2FAEnabled} />
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>Account</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <SettingItem label="Edit Profile" sublabel="Update your personal information" type="navigation" onPress={() => router.push('/(drawer)/editprofile')} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <SettingItem label="Change Password" sublabel="Update your account password" type="navigation" onPress={() => router.push('/(drawer)/changepassword')} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <SettingItem label="Two-Factor Authentication" sublabel="Add an extra layer of security" type="toggle" value={is2FAEnabled} onValueChange={set2FAEnabled} colors={colors} />
         </View>
 
-        <Text style={styles.sectionHeader}>Preferences</Text>
-        <View style={styles.card}>
-          <SettingItem label="Light/Dark Mode" sublabel="Choose your preferred theme" type="toggle" value={isDarkMode} onValueChange={setDarkMode} />
-          <View style={styles.divider} />
-          <SettingItem label="Push Notifications" sublabel="Receive notifications about your goals" type="toggle" value={pushNotifications} onValueChange={handleNotificationToggle} />
-          <View style={styles.divider} />
-          <SettingItem label="Reminder Schedule" sublabel="Choose how often you want reminders" type="value" value={reminderSchedule} onPress={() => router.push('/(drawer)/reminderschedule')} />
-          <View style={styles.divider} />
-          <SettingItem label="Test Notifications" sublabel="Test notification functionality" type="navigation" onPress={() => router.push('/(drawer)/test-notifications')} />
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>Preferences</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <SettingItem label="Dark Mode" sublabel="Switch between light and dark themes" type="toggle" value={isDarkMode} onValueChange={toggleTheme} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <SettingItem label="Push Notifications" sublabel="Receive notifications about your goals" type="toggle" value={pushNotifications} onValueChange={handleNotificationToggle} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <SettingItem label="Reminder Schedule" sublabel="Choose how often you want reminders" type="value" value={reminderSchedule} onPress={() => router.push('/(drawer)/reminderschedule')} colors={colors} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <SettingItem label="Test Notifications" sublabel="Test notification functionality" type="navigation" onPress={() => router.push('/(drawer)/test-notifications')} colors={colors} />
         </View>
 
-        <Text style={styles.sectionHeader}>Danger Zone</Text>
-        <View style={styles.card}>
-          <SettingItem label="Delete Account" sublabel="Permanently remove your account and data" type="danger" onPress={() => alert("Open Delete Account confirmation")} />
+        <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>Danger Zone</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <SettingItem label="Delete Account" sublabel="Permanently remove your account and data" type="danger" onPress={() => alert("Open Delete Account confirmation")} colors={colors} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -126,7 +117,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -136,25 +126,21 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 16,
     fontWeight: '600',
-    color: COLORS.textSecondary,
     textTransform: 'uppercase',
     marginBottom: 8,
     marginLeft: 8,
   },
   card: {
-    backgroundColor: COLORS.card,
     borderRadius: 12,
     marginBottom: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: COLORS.card,
   },
   itemTextContainer: {
     flex: 1,
@@ -162,26 +148,19 @@ const styles = StyleSheet.create({
   },
   itemLabel: {
     fontSize: 16,
-    color: COLORS.text,
     fontWeight: '500',
   },
   itemSublabel: {
     fontSize: 13,
-    color: COLORS.textSecondary,
     marginTop: 2,
   },
   itemValue: {
     fontSize: 16,
-    color: COLORS.primary,
     fontWeight: '600',
     marginRight: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F3F5',
     marginLeft: 16,
-  },
-  dangerText: {
-    color: COLORS.danger,
   },
 });
